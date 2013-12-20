@@ -69,8 +69,8 @@ HISTFILESIZE=2000
 
 # set a fancy prompt (non-color, unless we know we "want" color)
 case "$TERM" in
-    xterm-color) color_prompt=yes;;
-    screen-256color) color_prompt=yes;;
+    xterm-*color) color_prompt=yes;;
+    screen-*color) color_prompt=yes;;
 esac
 
 ps_user="$(whoami)"
@@ -87,7 +87,7 @@ if [ "$color_prompt" = yes ]; then
     # Display a smiley for success/failure [from galina@google.com]
     PS1="\`if [ \$? = 0 ]; then echo \[\e[32\;1\;40m\]:\\\); else echo \[\e[31\;1\;40m\]:\\\(; fi\`\[\e[0m\]$PS1"
 else
-    PS1="[${ps_user}@\h:\w] \$"
+    PS1="[${ps_user}@\h:\w] \$ "
 fi
 unset color_prompt force_color_prompt
 
