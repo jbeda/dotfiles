@@ -10,11 +10,12 @@ function e_arrow()    { echo -e " \033[1;33m➜\033[0m  $@"; }
 backup_dir="$HOME/.dotfiles-backups/$(date "+%Y_%m_%d-%H_%M_%S")/"
 backup=
 
+dotfile_base=~/src/dotfiles
+
 # Based on https://github.com/cowboy/dotfiles/blob/master/bin/dotfiles
 function do_stuff() {
   local base dest skip
-  local files=(~/src/dotfiles/$1/*)
-  echo $files
+  local files=($2/*)
   # No files? abort.
   if (( ${#files[@]} == 0 )); then return; fi
   # Run _header function only if declared.
@@ -61,7 +62,10 @@ function link_do() {
 shopt -s dotglob
 shopt -s nullglob
 
-do_stuff "link"
+platform=$(echo $(uname -s) | tr '[:upper:]' '[:lower:]')
+
+do_stuff "link" "$dotfile_base/link"
+[ -d "$dotfile_base/$platform/link" ] && do_stuff "link" "$dotfile_base/$platform/link"
 
 # Alert if backups were made.
 if [[ "$backup" ]]; then
