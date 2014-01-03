@@ -33,7 +33,7 @@
   excludesfile = ~/.gitignore
 
 [push]
-	default = simple
+	default = upstream
 
 [color]
   ui = auto
