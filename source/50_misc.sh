@@ -6,8 +6,10 @@ if command -v gdircolors >/dev/null 2>&1; then
 fi
 
 if command -v dircolors >/dev/null 2>&1; then
-  test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+  eval $(dircolors ~/src/dotfiles/lib/dircolors-solarized/dircolors.256dark)
+
   alias ls='ls --color=auto'
+  command -v gls >/dev/null 2>&1 && alias ls='gls --color=auto'
 
   alias grep='grep --color=auto'
   alias fgrep='fgrep --color=auto'
@@ -27,8 +29,8 @@ shopt -s checkwinsize
 FIGNORE=.o:~:.pyc:.class
 
 # make less more friendly for non-text input files, see lesspipe(1)
-command -v lesspipe && eval "$(lesspipe)"
-command -v lesspipe.sh && eval "$(lesspipe.sh)"
+command -v lesspipe >/dev/null 2>&1 && eval "$(lesspipe)"
+command -v lesspipe.sh >/dev/null 2>&1 && eval "$(lesspipe.sh)"
 
 # Prevent less from clearing the screen while still showing colors.
 export LESS=-XR
