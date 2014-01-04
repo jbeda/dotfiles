@@ -60,7 +60,7 @@ if [ "$color_prompt" = yes ]; then
   # For dark colored backgrounds: [user@host:dir] $
   PS1="${VIOLET}[${ps_user}@\h:${BASE0}\w${VIOLET}] ${ps_pane}${PS1} ${BASE0}"
   # Add date/time
-  PS1="${BASE01}\d\r\n${PS1}"
+  PS1="${BASE01}\d \t\r\n${PS1}"
   # Display a smiley for success/failure [from galina@google.com]
   PS1="\`if [ \$? = 0 ]; then echo $(printf '%q' ${GREEN}):\\\); else echo $(printf '%q' ${RED}):\\\(; fi\` ${PS1}"
 else
