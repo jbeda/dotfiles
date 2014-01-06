@@ -37,5 +37,5 @@ export LESS=-XR
 
 # Set the terminal's title bar.
 function titlebar() {
-  echo -n $'\e]0;'"$*"$'\a'
+  echo -ne "\ek$1\e\\"
 }
