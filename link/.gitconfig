@@ -29,7 +29,7 @@
 
 [core]
   autocrlf = input
-  whitespace = fix,space-before-tab,tab-in-indent,trailing-space,tabwidth=4
+  whitespace = space-before-tab,trailing-space,tabwidth=4
   excludesfile = ~/.gitignore
 
 [push]
