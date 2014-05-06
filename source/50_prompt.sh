@@ -53,7 +53,6 @@ if [ "$color_prompt" = yes ]; then
 
   if [ -n "$TMUX" ]; then
     ps_pane="${GREEN}(${TMUX_PANE}) "
-    echo $ps_pane
   fi
 
   if [ "$USER" = "root" ]; then
