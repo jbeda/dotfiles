@@ -4,10 +4,15 @@
 if ! shopt -oq posix; then
   if [ -f /usr/share/bash-completion/bash_completion ]; then
     . /usr/share/bash-completion/bash_completion
-  elif [ -f /etc/bash_completion ]; then
+  fi
+  if [ -f /etc/bash_completion ]; then
     . /etc/bash_completion
-  elif [ -f /brew/etc/bash_completion ]; then
+  fi
+  if [ -f /brew/etc/bash_completion ]; then
     . /brew/etc/bash_completion
+  fi
+  if [ -f /usr/local/etc/bash_completion ]; then
+    . /usr/local/etc/bash_completion
   fi
 
   # SSH auto-completion based on entries in known_hosts.
