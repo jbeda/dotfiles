@@ -26,6 +26,8 @@
   rb = rbranch
   rv = review
   st = status
+  furb = "!echo \"Fetch upstream\"; git fetch upstream; echo \"Rebase\"; git rebase upstream/master"
+  fp = push --all --prune -f
 
 [core]
   autocrlf = input
