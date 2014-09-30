@@ -28,6 +28,7 @@
   st = status
   furb = "!echo \"Fetch upstream\"; git fetch upstream; echo \"Rebase\"; git rebase upstream/master"
   fp = push --all --prune -f
+  superclean = clean -fdx
 
 [core]
   autocrlf = input
@@ -61,3 +62,5 @@
 
 [include]
 	path = ~/.gitconfig.platform
+[rebase]
+	autosquash = true
