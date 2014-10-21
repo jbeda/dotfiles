@@ -1,16 +1,14 @@
 [user]
-	name = Joe Beda
-	email = joe.github@bedafamily.com
+  name = Joe Beda
+  email = joe.github@bedafamily.com
+
+[core]
+  autocrlf = input
+  whitespace = space-before-tab,trailing-space,tabwidth=4
+  excludesfile = ~/.gitignore
+
 [credential]
-	helper = cache --timeout=3600
-[color]
-	ui = true
-	interactive = auto
-	filemode = false
-	diff = auto
-	status = auto
-	branch = auto
-	pager = true
+  helper = cache --timeout=3600
 
 [apply]
   whitespace = fix
@@ -26,20 +24,21 @@
   rb = rbranch
   rv = review
   st = status
+  fa = fetch --all --prune
   furb = "!echo \"Fetch upstream\"; git fetch upstream; echo \"Rebase\"; git rebase upstream/master"
   fp = push --all --prune -f
   superclean = clean -fdx
 
-[core]
-  autocrlf = input
-  whitespace = space-before-tab,trailing-space,tabwidth=4
-  excludesfile = ~/.gitignore
-
 [push]
-	default = upstream
+  default = upstream
 
 [color]
   ui = auto
+  interactive = auto
+  diff = auto
+  status = auto
+  branch = auto
+  pager = true
 [color "branch"]
   current = yellow reverse
   local = yellow
@@ -60,7 +59,8 @@
 [rerere]
   enabled = 1
 
-[include]
-	path = ~/.gitconfig.platform
 [rebase]
-	autosquash = true
+  autosquash = true
+
+[include]
+  path = ~/.gitconfig.platform
