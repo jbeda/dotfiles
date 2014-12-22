@@ -26,7 +26,7 @@
   st = status
   fa = fetch --all --prune
   furb = "!echo \"Fetch upstream\"; git fetch upstream; echo \"Rebase\"; git rebase upstream/master"
-  fp = push --all --prune -f
+  fp = push --all --prune -f origin
   superclean = clean -fdx
 
 [push]
