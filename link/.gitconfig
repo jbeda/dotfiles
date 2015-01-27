@@ -27,7 +27,7 @@
   fa = fetch --all --prune
   furb = "!echo \"Fetch upstream\"; git fetch upstream; echo \"Rebase\"; git rebase upstream/master"
   fp = push --all --prune -f origin
-  superclean = clean -fdx
+  superclean = clean -fdx -e '*.sublime-*'
 
 [push]
   default = upstream
