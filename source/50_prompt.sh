@@ -1,3 +1,10 @@
+# Include the cool git prompt integration stuff
+source "${DOTFILES_ROOT}/third_party/git/git-prompt.sh"
+GIT_PS1_SHOWDIRTYSTATE=y
+GIT_PS1_SHOWUNTRACKEDFILES=y
+GIT_PS1_SHOWCOLORHINTS=y
+GIT_PS1_DESCRIBE_STYLE=describe
+
 # set a fancy prompt (non-color, unless we know we "want" color)
 case "$TERM" in
   xterm-*color) color_prompt=yes;;
@@ -52,8 +59,10 @@ if [ "$color_prompt" = yes ]; then
   RESET="\[$(tput sgr0)\]"
 
   if [ -n "$TMUX" ]; then
-    ps_pane="${GREEN}(${TMUX_PANE}) "
+    ps_pane=" ${GREEN}(${TMUX_PANE})"
   fi
+
+  ps_git="${MAGENTA}\$(__git_ps1)"
 
   if [ "$USER" = "root" ]; then
     PS1="${RED}#"
@@ -61,8 +70,10 @@ if [ "$color_prompt" = yes ]; then
     PS1="${ORANGE}$"
   fi
 
+  ps_extra=""
+
   # For dark colored backgrounds: [user@host:dir] $
-  PS1="${VIOLET}[${ps_user}@\h:${BASE0}\w${VIOLET}] ${ps_pane}${PS1} ${BASE0}"
+  PS1="${VIOLET}[${ps_user}@\h:${BASE0}\w${VIOLET}]${CYAN}\${ps_extra}${ps_pane}${ps_git}${PS1} ${BASE0}"
   # Add date/time
   PS1="${BASE01}\d \t\r\n${PS1}"
   # Display a smiley for success/failure [from galina@google.com]
