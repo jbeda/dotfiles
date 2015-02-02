@@ -26,11 +26,12 @@
   st = status
   fa = fetch --all --prune
   furb = "!echo \"Fetch upstream\"; git fetch upstream; echo \"Rebase\"; git rebase upstream/master"
-  fp = push --all --prune -f origin
+  delete-merged-into-upstream = !"git branch --merged remotes/upstream/master | grep -v master | grep -v \"\\*\" | xargs -t -n 1 git branch -d"
+  remote-delete-merged-origin = !"git branch -a --merged remotes/origin/master | grep -v master | grep remotes/origin/ | cut -d / -f 3 | xargs -t -n 1 git push --delete origin"
   superclean = clean -fdx -e '*.sublime-*'
 
 [push]
-  default = upstream
+  default = current
 
 [color]
   ui = auto
