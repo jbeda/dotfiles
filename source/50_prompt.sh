@@ -62,7 +62,9 @@ if [ "$color_prompt" = yes ]; then
     ps_pane=" ${GREEN}(${TMUX_PANE})"
   fi
 
-  ps_git="${MAGENTA}\$(__git_ps1)"
+  if [[ -z "$DISABLE_GIT_PROMPT" ]]; then
+    ps_git="${MAGENTA}\$(__git_ps1)"
+  fi
 
   if [ "$USER" = "root" ]; then
     PS1="${RED}#"

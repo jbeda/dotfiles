@@ -6,6 +6,7 @@
   autocrlf = input
   whitespace = space-before-tab,trailing-space,tabwidth=4
   excludesfile = ~/.gitignore
+  preloadindex = true
 
 [credential]
   helper = cache --timeout=3600
