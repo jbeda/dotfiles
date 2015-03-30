@@ -5,16 +5,10 @@ GIT_PS1_SHOWUNTRACKEDFILES=y
 GIT_PS1_SHOWCOLORHINTS=y
 GIT_PS1_DESCRIBE_STYLE=describe
 
-# set a fancy prompt (non-color, unless we know we "want" color)
-case "$TERM" in
-  xterm-*color) color_prompt=yes;;
-  screen-*color) color_prompt=yes;;
-esac
-
 ps_user="$(whoami)"
 ps_pane=""
 
-if [ "$color_prompt" = yes ]; then
+if [[ $(tput colors) -ge 8 ]]; then
   tput sgr0
   if [[ $(tput colors) -ge 256 ]] 2>/dev/null; then
     BASE03="\[$(tput setaf 234)\]"
@@ -83,4 +77,3 @@ if [ "$color_prompt" = yes ]; then
 else
   PS1="[${ps_user}@\h:\w] \$ "
 fi
-unset color_prompt force_color_prompt
