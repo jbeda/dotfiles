@@ -1,4 +1,4 @@
-if [[ ! "$SSH_TTY" && "$OSTYPE" =~ ^darwin ]]; then
+if [[ ! "$SSH_TTY" ]] && which subl >/dev/null 2>&1; then
   export EDITOR='subl -w'
   export LESSEDIT='subl %f'
 else
