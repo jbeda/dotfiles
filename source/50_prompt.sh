@@ -8,7 +8,7 @@ GIT_PS1_DESCRIBE_STYLE=describe
 ps_user="$(whoami)"
 ps_pane=""
 
-if [[ $(tput colors) -ge 8 ]]; then
+if [[ -n "$TERM" && $(tput colors) -ge 8 ]]; then
   tput sgr0
   if [[ $(tput colors) -ge 256 ]] 2>/dev/null; then
     BASE03="\[$(tput setaf 234)\]"
