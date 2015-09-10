@@ -9,5 +9,8 @@ if type docker-machine >& /dev/null && [[ $(uname -s) == "Darwin" ]]; then
     docker-machine start dev
     eval $(boot2docker env dev 2>/dev/null) 
   }
-fi
 
+  function fix-docker-machine-clock {
+    docker-machine ssh dev "sudo date -u -D '%Y%m%d%H%M.%S' --set \"$(date -u +%Y%m%d%H%M.%S)\"" >/dev/null
+  }
+fi
