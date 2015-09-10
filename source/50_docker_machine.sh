@@ -11,6 +11,6 @@ if type docker-machine >& /dev/null && [[ $(uname -s) == "Darwin" ]]; then
   }
 
   function fix-docker-machine-clock {
-    docker-machine ssh dev "sudo date -u -D '%Y%m%d%H%M.%S' --set \"$(date -u +%Y%m%d%H%M.%S)\"" >/dev/null
+    docker-machine ssh dev "sudo date -u -D %s --set $(date -u +%s)" >/dev/null
   }
 fi
