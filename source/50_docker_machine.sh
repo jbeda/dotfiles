@@ -7,7 +7,8 @@ if type docker-machine >& /dev/null && [[ $(uname -s) == "Darwin" ]]; then
 
   function start-docker-machine {
     docker-machine start dev
-    eval $(docker-machine env dev 2>/dev/null) 
+    sleep 5
+    eval $(docker-machine env dev 2>/dev/null)
   }
 
   function fix-docker-machine-clock {
