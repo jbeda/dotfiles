@@ -8,3 +8,10 @@ fi
 if [ -r "${CLOUD_SDK_DIR}/completion.bash.inc" ]; then
   source "${CLOUD_SDK_DIR}/completion.bash.inc"
 fi
+
+function gcloud-docker-logs {
+  gcloud beta logging read \
+    --order ASC \
+    --format='value(timestamp, jsonPayload.data)' \
+    "jsonPayload.container.name=\"/$1\""
+}
