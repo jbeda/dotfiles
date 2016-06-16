@@ -10,8 +10,15 @@ if [ -r "${CLOUD_SDK_DIR}/completion.bash.inc" ]; then
 fi
 
 function gcloud-docker-logs {
+  local dayago
+  if [ $(uname -s) = "Darwin" ]; then
+    dayago=$(date -v-1d -u '+%Y-%m-%dT%H:%M:%SZ')
+  else
+    dayago=$(date  --date="-1 day" -Isec -u)
+  fi
+
   gcloud beta logging read \
     --order ASC \
     --format='value(timestamp, jsonPayload.data)' \
-    "jsonPayload.container.name=\"/$1\""
+    "jsonPayload.container.name=\"/$1\" AND timestamp > \"${dayago}\""
 }
