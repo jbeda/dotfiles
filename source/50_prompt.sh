@@ -60,20 +60,25 @@ if [[ -n "$TERM" && $(tput colors) -ge 8 ]]; then
     ps_git="${MAGENTA}\$(__git_ps1)"
   fi
 
+  ps_cloud="🏠"
+  if grep metadata.google.internal /etc/hosts 2> /dev/null ; then
+    ps_cloud="☁️"
+  fi
+
   if [ "$USER" = "root" ]; then
-    PS1="${RED}#"
+    PS1="${RED}🐙 "
   else
-    PS1="${ORANGE}$"
+    PS1="${ORANGE}💰 "
   fi
 
   ps_extra=""
 
   # For dark colored backgrounds: [user@host:dir] $
-  PS1="${VIOLET}[${ps_user}@\h:${BASE0}\w${VIOLET}]${CYAN}\${ps_extra}${ps_pane}${ps_git}${PS1} ${BASE0}"
+  PS1="${BASE0}\w${CYAN}\${ps_extra}${ps_pane}${ps_git}${PS1} ${BASE0}"
   # Add date/time
-  PS1="${BASE01}\d \t\r\n${PS1}"
+  PS1="${BASE01}\d ${VIOLET}${ps_user}@\h $ps_cloud\r\n${PS1}"
   # Display a smiley for success/failure [from galina@google.com]
-  PS1="\`if [ \$? = 0 ]; then echo $(printf '%q' ${BARE_GREEN}):\\\); else echo $(printf '%q' ${BARE_RED}):\\\(; fi\` ${PS1}"
+  PS1="\`if [ \$? = 0 ]; then echo 😄; else echo 😡; fi\`  ${PS1}"
 else
   PS1="[${ps_user}@\h:\w] \$ "
 fi
