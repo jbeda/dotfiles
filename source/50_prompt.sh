@@ -61,7 +61,7 @@ if [[ -n "$TERM" && $(tput colors) -ge 8 ]]; then
   fi
 
   ps_cloud="🏠"
-  if grep metadata.google.internal /etc/hosts 2> /dev/null ; then
+  if grep Google /sys/class/dmi/id/bios_vendor 2> /dev/null ; then
     ps_cloud="☁️"
   fi
 
