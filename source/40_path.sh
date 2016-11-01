@@ -22,3 +22,7 @@ fi
 if [ -d "$HOME/src/go/bin" ] ; then
     PATH="$HOME/src/go/bin:$PATH"
 fi
+
+if [ -d "$HOME/.node_modules_global/bin" ] ; then
+    PATH="$HOME/.node_modules_global/bin:$PATH"
+fi
