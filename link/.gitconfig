@@ -31,6 +31,7 @@
   remote-delete-merged-origin = !"git branch -a --merged remotes/origin/master | grep -v master | grep remotes/origin/ | cut -d / -f 3 | xargs -t -n 1 git push --delete origin"
   superclean = clean -fdx -e '*.sublime-*' -e '.gcloud'
   pr = !"pr() { git fetch upstream pull/$1/head:pr-$1; git checkout pr-$1; }; pr"
+  amend = commit -n --amend --no-edit
 
 [push]
   default = current
