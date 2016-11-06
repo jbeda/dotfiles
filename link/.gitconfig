@@ -1,6 +1,7 @@
 [user]
   name = Joe Beda
   email = joe.github@bedafamily.com
+	signingkey = 63A3591D
 
 [core]
   autocrlf = input
@@ -70,3 +71,5 @@
   path = ~/.gitconfig.platform
 [url "git@github.com:"]
 	insteadOf = https://github.com/
+[commit]
+	gpgsign = true
