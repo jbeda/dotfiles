@@ -65,6 +65,11 @@ if [[ -n "$TERM" && $(tput colors) -ge 8 ]]; then
     ps_cloud="☁️"
   fi
 
+  # If PID 1 isn't `init` there is a good chance we are containerized
+  if [[ -d /proc ]] && (ps -p 1 | grep -qv init) ; then
+    ps_cloud="📦"
+  fi
+
   if [ "$USER" = "root" ]; then
     PS1="${RED}🐙 "
   else

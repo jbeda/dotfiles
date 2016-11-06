@@ -6,6 +6,7 @@ if command -v gdircolors >/dev/null 2>&1; then
 fi
 
 if command -v dircolors >/dev/null 2>&1; then
+  echo "SHELL: $SHELL"
   eval $(dircolors "${DOTFILES_ROOT}/third_party/dircolors-solarized/dircolors.256dark")
 
   alias ls='ls --color=auto'
