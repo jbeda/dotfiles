@@ -15,4 +15,7 @@ push:
 run:
 	docker run -ti --rm $(IMAGE_NAME)
 
+kube-run:
+	kubectl run -i -t --image=$(IMAGE_NAME) shell --restart=Never --rm
+
 default: build
