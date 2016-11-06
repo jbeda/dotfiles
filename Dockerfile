@@ -14,7 +14,8 @@ RUN apt-get update && \
         locales-all \
         net-tools \
         dnsutils \
-        iproute2 && \
+        iproute2 \
+        iputils-ping && \
     rm -Rf /var/lib/apt/lists/* && \
     apt-get clean && \
     apt-get autoremove -y
