@@ -26,18 +26,10 @@ RUN useradd --user-group \
             --shell /bin/bash \
             jbeda && \
     echo 'jbeda ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
-
-COPY . /home/jbeda/src/dotfiles
-RUN chown -R jbeda.jbeda /home/jbeda
-
 # Switch to damon user and /home/damon directory
 USER jbeda
 ENV HOME /home/jbeda
 WORKDIR /home/jbeda
-
-RUN mkdir .ssh && \
-    cd src/dotfiles && \
-    ./install
 
 # RUN mkdir src && cd src && \
 #     git clone git://github.com/jbeda/dotfiles.git && \
@@ -55,6 +47,13 @@ RUN curl -LO https://storage.googleapis.com/golang/go${GO_VERSION}.linux-amd64.t
     mv go goroot && \
     rm go${GO_VERSION}.linux-amd64.tar.gz && \
     mkdir -p src/go/bin
+
+COPY . /home/jbeda/src/dotfiles
+
+RUN mkdir .ssh && \
+    sudo chown -R jbeda.jbeda /home/jbeda && \
+    cd src/dotfiles && \
+    ./install
 
 ENTRYPOINT ["/bin/bash"]
 CMD ["--login"]
