@@ -1,0 +1,1 @@
+alias code='code --disable-gpu'

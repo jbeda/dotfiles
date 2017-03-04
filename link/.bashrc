@@ -2,6 +2,7 @@ DOTFILES_ROOT="${HOME}/src/dotfiles"
 
 function src() {
   local file
+  local platform=$(echo $(uname -s) | tr '[:upper:]' '[:lower:]')
 
   if [[ -e "$HOME/.bash.local" ]]; then
     source "$HOME/.bash.local"
@@ -13,6 +14,11 @@ function src() {
     for file in "${DOTFILES_ROOT}/source/"*; do
       source "$file"
     done
+    if [[ -d "$DOTFILES_ROOT/$platform/source" ]]; then
+      for file in "${DOTFILES_ROOT}/$platform/source/"/*; do
+        source "$file"
+      done
+    fi
   fi
 }
 
