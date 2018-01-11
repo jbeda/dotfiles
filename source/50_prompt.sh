@@ -80,11 +80,11 @@ if [[ -n "$TERM" && $(tput colors) -ge 8 ]]; then
   ps_extra=""
 
   # For dark colored backgrounds: [user@host:dir] $
-  PS1="${BASE0}\w${CYAN}\${ps_extra}${ps_pane}${ps_git}${PS1} ${BASE0}"
+  PS1="${BASE0}\w${CYAN}\${ps_extra}${ps_pane}${ps_git}${PS1}${BASE0}"
   # Add date/time
   PS1="${BASE01}\d ${VIOLET}${ps_user}@\h $ps_cloud\r\n${PS1}"
   # Display a smiley for success/failure [from galina@google.com]
-  PS1="\`if [ \$? = 0 ]; then echo 😄; else echo 😡; fi\`  ${PS1}"
+  PS1="\`if [ \$? = 0 ]; then echo 😄; else echo 😡; fi\` ${PS1}"
 else
   PS1="[${ps_user}@\h:\w] \$ "
 fi
