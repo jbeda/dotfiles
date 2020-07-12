@@ -39,3 +39,7 @@ export LESS=-XR
 function titlebar() {
   echo -ne "\ek$1\e\\"
 }
+
+# On the mac supress the annoying warning about switching to zsh.
+# I'll do that on my own time TYVM!
+export BASH_SILENCE_DEPRECATION_WARNING=1
