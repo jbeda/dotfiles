@@ -1,10 +1,3 @@
-if [ -d "/brew/bin" ]; then
-  PATH="/brew/bin:$PATH"
-fi
-if [ -d "/brew/sbin" ]; then
-  PATH="/brew/sbin:$PATH"
-fi
-
 # Make /usr/local/bin come earlier on the path to make brew on OSX work well
 # when installed there.
 if [ -d "/usr/local/bin" ]; then
