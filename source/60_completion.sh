@@ -14,6 +14,9 @@ if ! shopt -oq posix; then
   if [ -f /usr/local/etc/bash_completion ]; then
     . /usr/local/etc/bash_completion
   fi
+  if [ -r "/opt/homebrew/etc/profile.d/bash_completion.sh" ]; then
+    . /opt/homebrew/etc/profile.d/bash_completion.sh
+  fi
 
   # SSH auto-completion based on entries in known_hosts.
   if [ -f ~/.ssh/known_hosts ]; then
