@@ -27,9 +27,9 @@
   rv = review
   st = status
   fa = fetch --all --prune
-  furb = "!echo \"Fetch upstream\"; git fetch upstream; echo \"Rebase\"; git rebase upstream/master"
-  delete-merged-into-upstream = !"git branch --merged remotes/upstream/master | grep -v master | grep -v \"\\*\" | xargs -t -n 1 git branch -d"
-  remote-delete-merged-origin = !"git branch -a --merged remotes/origin/master | grep -v master | grep remotes/origin/ | cut -d / -f 3 | xargs -t -n 1 git push --delete origin"
+  furb = "!echo \"Fetch upstream\"; git fetch upstream; echo \"Rebase\"; git rebase upstream/main"
+  delete-merged-into-upstream = !"git branch --merged remotes/upstream/main | grep -v main | grep -v \"\\*\" | xargs -t -n 1 git branch -d"
+  remote-delete-merged-origin = !"git branch -a --merged remotes/origin/main | grep -v main | grep remotes/origin/ | cut -d / -f 3 | xargs -t -n 1 git push --delete origin"
   superclean = clean -fdx -e '*.sublime-*' -e '.gcloud'
   pr = !"pr() { git fetch upstream pull/$1/head:pr-$1; git checkout pr-$1; }; pr"
   amend = commit -n --amend --no-edit
@@ -73,3 +73,5 @@
 	insteadOf = https://github.com/
 [commit]
 	gpgsign = true
+[init]
+	defaultBranch = main
