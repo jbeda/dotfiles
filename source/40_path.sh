@@ -12,10 +12,18 @@ if [ -d "$HOME/bin" ] ; then
     PATH="$HOME/bin:$PATH"
 fi
 
+if [ -d "$HOME/.local/bin"] ; then
+  PATH="$HOME/.local/bin:$PATH"
+fi
+
 if [ -d "$HOME/src/go/bin" ] ; then
     PATH="$HOME/src/go/bin:$PATH"
 fi
 
 if [ -d "$HOME/.node_modules_global/bin" ] ; then
     PATH="$HOME/.node_modules_global/bin:$PATH"
+fi
+
+if [ -d "$HOME/.toolhive/bin"] ; then
+  PATH="$HOME/.toolhive/bin:$PATH"
 fi
