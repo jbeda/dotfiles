@@ -79,8 +79,18 @@ if [[ -n "$TERM" && $(tput colors) -ge 8 ]]; then
 
   ps_extra=""
 
+  __prompt_dir() {
+    local dir="${PWD/#$HOME/~}"
+    local max_len=$(( COLUMNS * 2 / 5 ))
+    if (( max_len > 10 && ${#dir} > max_len )); then
+      echo "...${dir: -$(( max_len - 3 ))}"
+    else
+      echo "$dir"
+    fi
+  }
+
   # For dark colored backgrounds: [user@host:dir] $
-  PS1="${BASE0}\w${CYAN}\${ps_extra}${ps_pane}${ps_git}${PS1}${BASE0}"
+  PS1="${BASE0}\$(__prompt_dir)${CYAN}\${ps_extra}${ps_pane}${ps_git}${PS1}${BASE0}"
   # Add date/time
   PS1="${BASE01}\d ${VIOLET}${ps_user}@\h $ps_cloud\r\n${PS1}"
   # Display a smiley for success/failure [from galina@google.com]
