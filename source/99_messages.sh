@@ -1,8 +1,4 @@
-# If not running interactively, don't do anything
-case $- in
-    *i*) ;;
-      *) return;;
-esac
+[[ -o interactive ]] || return
 
 if [ -n "$TMUX" ]; then
     echo You are currently inside tmux pane $TMUX_PANE

@@ -1,3 +1,5 @@
+[[ -o interactive ]] || return
+
 # Usage: iterm2_set_badge <text>
 # Requires iTerm2 shell integration to be installed.
 function iterm2_set_badge() {

@@ -1,3 +1,5 @@
+[[ -o interactive ]] || return
+
 # Include the cool git prompt integration stuff
 source "${DOTFILES_ROOT}/third_party/git/git-prompt.sh"
 GIT_PS1_SHOWDIRTYSTATE=y

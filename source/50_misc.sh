@@ -1,3 +1,5 @@
+[[ -o interactive ]] || return
+
 # enable color support of ls and also add handy aliases
 
 # brew installs gnu coreutils with a 'g' prefix
@@ -20,6 +22,15 @@ fi
 
 # Case-insensitive globbing (used in pathname expansion)
 setopt NOCASEGLOB
+
+# Type a directory name to cd into it
+setopt AUTO_CD
+
+# Allow # comments in an interactive shell
+setopt INTERACTIVE_COMMENTS
+
+# Silence the terminal bell
+setopt NO_BEEP
 
 # You can tell tab completion to ignore certain file extensions.
 FIGNORE=.o:~:.pyc:.class

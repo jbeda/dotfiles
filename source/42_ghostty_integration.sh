@@ -1,3 +1,5 @@
+[[ -o interactive ]] || return
+
 # Ghostty shell integration.
 # GHOSTTY_RESOURCES_DIR is set by Ghostty when spawning a shell directly.
 # Sourcing this enables prompt marks, working directory reporting, and title updates.
