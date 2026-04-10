@@ -1,10 +1,8 @@
-# don't put duplicate lines or lines starting with space in the history.
-# See bash(1) for more options
-HISTCONTROL=ignoreboth
+# Don't save duplicate lines or lines starting with space
+setopt HIST_IGNORE_DUPS HIST_IGNORE_SPACE
 
-# append to the history file, don't overwrite it
-shopt -s histappend
+# Append to history file, don't overwrite it
+setopt APPEND_HISTORY
 
-# for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
 HISTSIZE=1000
-HISTFILESIZE=2000
+SAVEHIST=2000

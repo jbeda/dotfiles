@@ -1,8 +1,5 @@
 # If not running interactively, don't do anything
-case $- in
-    *i*) ;;
-      *) return;;
-esac
+[[ -o interactive ]] || return
 
 # Ensure that there is an ssh-agent running.  If it isn't already running start
 # one.  If it is, hook up to it.

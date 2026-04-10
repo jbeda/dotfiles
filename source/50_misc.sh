@@ -19,11 +19,7 @@ elif [ "$(uname)" = "Darwin" ]; then
 fi
 
 # Case-insensitive globbing (used in pathname expansion)
-shopt -s nocaseglob
-
-# Check the window size after each command and, if necessary,
-# update the values of LINES and COLUMNS.
-shopt -s checkwinsize
+setopt NOCASEGLOB
 
 # You can tell tab completion to ignore certain file extensions.
 FIGNORE=.o:~:.pyc:.class
@@ -39,7 +35,3 @@ export LESS=-XR
 function titlebar() {
   echo -ne "\ek$1\e\\"
 }
-
-# On the mac supress the annoying warning about switching to zsh.
-# I'll do that on my own time TYVM!
-export BASH_SILENCE_DEPRECATION_WARNING=1

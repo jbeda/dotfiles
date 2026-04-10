@@ -5,8 +5,8 @@ if [ -d "${CLOUD_SDK_DIR}" ]; then
 
   alias gce="gcloud compute"
 fi
-if [ -r "${CLOUD_SDK_DIR}/completion.bash.inc" ]; then
-  source "${CLOUD_SDK_DIR}/completion.bash.inc"
+if [ -r "${CLOUD_SDK_DIR}/completion.zsh.inc" ]; then
+  source "${CLOUD_SDK_DIR}/completion.zsh.inc"
 fi
 
 function gcloud-docker-logs {
