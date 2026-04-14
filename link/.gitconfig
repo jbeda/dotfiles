@@ -1,7 +1,7 @@
 [user]
   name = Joe Beda
   email = joe.github@bedafamily.com
-	signingkey = 63A3591D
+	signingkey = /Users/jbeda/.ssh/id_ed25519.pub
 
 [core]
   autocrlf = input
@@ -75,3 +75,5 @@
 	gpgsign = true
 [init]
 	defaultBranch = main
+[gpg]
+	format = ssh
