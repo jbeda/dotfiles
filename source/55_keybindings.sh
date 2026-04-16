@@ -3,6 +3,9 @@
 # Emacs-style line editing
 bindkey -e
 
+# Make ESC-Backspace stop at path separators (treat / as a word boundary)
+WORDCHARS=${WORDCHARS/\//}
+
 # Up/down arrow: search history by the prefix typed so far.
 # e.g. type "git" then press Up to cycle through previous git commands only.
 autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
