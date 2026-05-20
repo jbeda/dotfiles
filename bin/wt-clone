@@ -41,6 +41,8 @@ git -C "$dest/.bare" fetch origin
 default_branch="$(git -C "$dest/.bare" symbolic-ref --short HEAD 2>/dev/null || echo main)"
 
 echo "Checking out $default_branch worktree"
-wt -C "$dest/.bare" switch "$default_branch"
+wt -C "$dest/.bare" switch --no-cd "$default_branch"
 
-echo "Done. Your worktree is at $dest/$default_branch"
+echo ""
+echo "Done. cd to your new worktree:"
+echo "  cd $dest/$default_branch"
