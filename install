@@ -58,6 +58,30 @@ function link_do() {
   ln -sf ${2#$HOME/} ~/
 }
 
+# Link individual bin files into ~/bin (keeps ~/bin a real dir so other tools can write there).
+function link_bin() {
+  local files=($dotfile_base/bin/*)
+  if (( ${#files[@]} == 0 )); then return; fi
+  e_header "Linking files into ~/bin"
+  mkdir -p "$HOME/bin"
+  for file in "${files[@]}"; do
+    local base="$(basename $file)"
+    local dest="$HOME/bin/$base"
+    if [[ "$file" -ef "$dest" ]]; then
+      e_error "Skipping ~/bin/$base, same file."
+      continue
+    fi
+    if [[ -e "$dest" ]]; then
+      e_arrow "Backing up ~/bin/$base."
+      backup=1
+      [[ -e "$backup_dir" ]] || mkdir -p "$backup_dir"
+      mv "$dest" "$backup_dir"
+    fi
+    e_success "Linking ~/bin/$base."
+    ln -sf "$file" "$HOME/bin/$base"
+  done
+}
+
 # Tweak file globbing.
 shopt -s dotglob
 shopt -s nullglob
@@ -66,6 +90,7 @@ platform=$(echo $(uname -s) | tr '[:upper:]' '[:lower:]')
 
 do_stuff "link" "$dotfile_base/link"
 [ -d "$dotfile_base/$platform/link" ] && do_stuff "link" "$dotfile_base/$platform/link"
+link_bin
 
 # Alert if backups were made.
 if [[ "$backup" ]]; then
