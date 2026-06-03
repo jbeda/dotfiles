@@ -12,6 +12,9 @@ if [[ -o interactive ]]; then
     node() { _nvm_load; node "$@"; }
     npm()  { _nvm_load; npm "$@"; }
     npx()  { _nvm_load; npx "$@"; }
+
+    # Source nvm before launching claude so subprocesses inherit node on PATH.
+    claude() { source "$NVM_DIR/nvm.sh"; unset -f claude; command claude "$@"; }
   fi
 else
   # Non-interactive: load eagerly so node/npm are in PATH for scripts.

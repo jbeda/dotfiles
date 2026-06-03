@@ -44,3 +44,15 @@ Initialize submodules with `git submodule update --init` after cloning.
 ### Docker
 
 The `Makefile` builds/pushes a container image (`gcr.io/jbeda-prod/dotfiles`) that installs these dotfiles into an Ubuntu base. Targets: `make build`, `make push`, `make run`, `make kube-run`.
+
+## Pre-commit: strip ToolHive injections
+
+ToolHive silently appends the following block to `link/.zshrc` when it launches — remove it before committing:
+
+```
+# Added by ToolHive UI - do not modify this block
+export PATH="$HOME/.toolhive/bin:$PATH"
+# End ToolHive UI
+```
+
+Before staging or committing any change in this repo, check `git diff link/.zshrc` (and the working-tree file) for this block and strip it. Do not commit it.
