@@ -1,0 +1,4 @@
+# Included for any repo whose remote is in the stacklok GitHub org.
+# Wired up via conditional `includeIf "hasconfig:remote.*.url:..."` in .gitconfig.
+[user]
+  email = joe@stacklok.com

@@ -77,3 +77,15 @@
 	defaultBranch = main
 [gpg]
 	format = ssh
+
+# Use the work email for any repo in the stacklok / stackloklabs GitHub orgs.
+# Matches on the remote URL (git 2.36+), so it applies wherever the repo is cloned.
+# Placed last so it overrides the default [user] email above.
+[includeIf "hasconfig:remote.*.url:git@github.com:stacklok/**"]
+	path = ~/src/dotfiles/link/.gitconfig-stacklok
+[includeIf "hasconfig:remote.*.url:https://github.com/stacklok/**"]
+	path = ~/src/dotfiles/link/.gitconfig-stacklok
+[includeIf "hasconfig:remote.*.url:git@github.com:stackloklabs/**"]
+	path = ~/src/dotfiles/link/.gitconfig-stacklok
+[includeIf "hasconfig:remote.*.url:https://github.com/stackloklabs/**"]
+	path = ~/src/dotfiles/link/.gitconfig-stacklok
