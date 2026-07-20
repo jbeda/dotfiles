@@ -1,7 +1,9 @@
 [user]
   name = Joe Beda
   email = joe.github@bedafamily.com
-	signingkey = /Users/jbeda/.ssh/id_ed25519.pub
+  # signingkey is set per-platform in ~/.gitconfig.platform: a .pub file path on
+  # macOS, the public-key literal on Linux (so it resolves via a forwarded agent
+  # without a local key file). Included below, so it lands after this section.
 
 [core]
   autocrlf = input
