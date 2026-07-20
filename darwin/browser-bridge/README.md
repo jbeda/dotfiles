@@ -17,23 +17,33 @@ is a one-time setup, scripted below.
 
 ## Mac setup (run on the Mac, once)
 
-The `setup-mac` script does everything — links and loads the launchd listener,
-self-tests it, and (given your Host alias) adds the `RemoteForward` to
-`~/.ssh/config`. It's idempotent, so re-run it any time.
+The `setup-mac` script links and loads the launchd listener, self-tests it, and
+prints the `RemoteForward` line for you to add to `~/.ssh/config` by hand. It
+doesn't edit `~/.ssh/config` — dropping one line into the right host block once
+is simpler and safer than teaching a script to merge into multi-name `Host`
+lines. It's idempotent, so re-run it any time (e.g. to reload after editing the
+plist).
 
 ```sh
-~/src/dotfiles/darwin/browser-bridge/setup-mac claudes-plan   # <- your Host alias
+~/src/dotfiles/darwin/browser-bridge/setup-mac claudes-plan   # alias is only for the printed hint
 ```
 
-Then **reconnect** your SSH session and, from the Linux box:
+Then add the printed line **inside your existing host block** (don't create a
+second `Host` block — SSH accumulates `RemoteForward` across matching blocks,
+but a per-name block only applies when you connect using that exact name):
+
+```sshconfig
+Host claudes-plan claudes-plan.h.bedafamily.com
+    Hostname claudes-plan.h.bedafamily.com
+    ForwardAgent yes
+    RemoteForward 17603 127.0.0.1:17603
+```
+
+Finally **reconnect** your SSH session and, from the Linux box:
 
 ```sh
 browse https://example.com     # opens on your Mac
 ```
-
-Run it with no argument to install the listener but print the ssh_config line
-for you to add by hand instead. To reload after editing the plist, just re-run
-`setup-mac`.
 
 ### What it does, by hand
 

@@ -5,10 +5,10 @@
 #
 #   ./setup-mac [ssh-host-alias]
 #
-# With no argument it installs + loads the launchd listener and self-tests it,
-# then prints the ssh_config line to add. Pass your Host alias for the remote
-# box (e.g. `./setup-mac claudes-plan`) to also append the RemoteForward to
-# ~/.ssh/config automatically.
+# It installs + loads the launchd listener, self-tests it, and prints the
+# RemoteForward line to add to ~/.ssh/config by hand. An optional Host alias
+# (e.g. `./setup-mac claudes-plan`) is only used to make the printed hint
+# concrete; it never edits any files.
 set -euo pipefail
 
 PORT=17603
@@ -43,27 +43,14 @@ else
   die "Nothing answered on 127.0.0.1:$PORT -- check: launchctl list | grep browser-bridge"
 fi
 
-# --- 3. Wire up the ssh RemoteForward -----------------------------------
+# --- 3. Print the ssh RemoteForward line to add by hand -----------------
+# Editing ~/.ssh/config automatically is fiddly (multi-name Host lines, merging
+# into an existing block), and this is a rare one-time step -- so just print the
+# line and let you drop it into the right block yourself.
 fwd_line="    RemoteForward $PORT 127.0.0.1:$PORT"
-if [[ -n "$ssh_host" ]]; then
-  cfg="$HOME/.ssh/config"
-  marker="# browser-bridge:$ssh_host"
-  mkdir -p "$HOME/.ssh"; touch "$cfg"; chmod 600 "$cfg"
-  if grep -qF "$marker" "$cfg"; then
-    say "ssh RemoteForward for '$ssh_host' already present in ~/.ssh/config"
-  else
-    {
-      printf '\n%s (managed) >>>\n' "$marker"
-      printf 'Host %s\n%s\n' "$ssh_host" "$fwd_line"
-      printf '%s (managed) <<<\n' "$marker"
-    } >> "$cfg"
-    say "Appended RemoteForward for '$ssh_host' to ~/.ssh/config"
-  fi
-  info "Reconnect your SSH session for the forward to take effect."
-else
-  info "No host alias given. Add this to the host's block in ~/.ssh/config:"
-  printf '\n    Host <your-remote-alias>\n    %s\n\n' "$fwd_line"
-  info "Or re-run: ./setup-mac <your-remote-alias> to do it automatically."
-fi
+info "Add this line to your remote host's block in ~/.ssh/config:"
+printf '\n%s\n\n' "$fwd_line"
+info "Put it inside the existing 'Host ${ssh_host:-<your-remote-alias>}' block (don't"
+info "create a second block), then reconnect your SSH session for it to take effect."
 
 say "Done. From the remote box: browse https://example.com"
