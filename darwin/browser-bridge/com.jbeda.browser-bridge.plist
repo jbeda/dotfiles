@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.jbeda.browser-bridge</string>
+
+  <!-- inetd-style: launchd listens on the socket, accepts each connection,
+       and runs the program once per connection with the socket wired to
+       stdin/stdout. No long-running daemon, no polling. -->
+  <key>inetdCompatibility</key>
+  <dict>
+    <key>Wait</key>
+    <false/>
+  </dict>
+
+  <key>Sockets</key>
+  <dict>
+    <key>Listeners</key>
+    <dict>
+      <!-- Bound to loopback: only the SSH reverse tunnel (which lands on the
+           Mac's localhost) can reach it. -->
+      <key>SockNodeName</key>
+      <string>127.0.0.1</string>
+      <key>SockServiceName</key>
+      <string>17603</string>
+      <key>SockType</key>
+      <string>stream</string>
+      <key>SockFamily</key>
+      <string>IPv4</string>
+    </dict>
+  </dict>
+
+  <!-- Read one line (the URL) from the socket and open it. Only http/https are
+       honored, so a stray connection can't `open` file:// or app-scheme URLs. -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/sh</string>
+    <string>-c</string>
+    <string>IFS= read -r url; case "$url" in http://*|https://*) exec /usr/bin/open "$url";; esac</string>
+  </array>
+</dict>
+</plist>

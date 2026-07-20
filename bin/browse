@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+#
+# browse -- open a URL in the browser on the OTHER end of the SSH connection
+# (your Mac), via a reverse-forwarded port.
+#
+# Reads the URL from $1 or stdin and writes it to 127.0.0.1:$BROWSER_BRIDGE_PORT,
+# where an SSH RemoteForward tunnels it back to a launchd listener on the Mac
+# that runs `open`. See darwin/browser-bridge/ for the Mac side + ssh config.
+#
+# Prints a hint and exits non-zero if the tunnel/listener isn't up.
+set -euo pipefail
+
+port="${BROWSER_BRIDGE_PORT:-17603}"
+url="${1:-}"
+[[ -n "$url" ]] || { IFS= read -r url || true; }
+[[ -n "$url" ]] || { echo "browse: no URL given (pass as arg or on stdin)" >&2; exit 1; }
+
+if ! exec 3<>"/dev/tcp/127.0.0.1/${port}" 2>/dev/null; then
+  echo "browse: nothing is listening on 127.0.0.1:${port}." >&2
+  echo "        Is the SSH RemoteForward active and the Mac listener loaded?" >&2
+  echo "        See ~/src/dotfiles/darwin/browser-bridge/README.md" >&2
+  exit 1
+fi
+
+printf '%s\n' "$url" >&3
+exec 3>&-
