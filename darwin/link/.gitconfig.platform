@@ -4,3 +4,13 @@
 [user]
   signingkey = /Users/jbeda/.ssh/id_ed25519.pub
 
+
+# GitHub over https authenticates through gh (transport forced to https by the
+# url.insteadOf rewrite in .gitconfig). The empty helper resets the global
+# helper list so only gh is consulted for github.com.
+[credential "https://github.com"]
+	helper =
+	helper = !/opt/homebrew/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper =
+	helper = !/opt/homebrew/bin/gh auth git-credential

@@ -71,8 +71,9 @@
 
 [include]
   path = ~/.gitconfig.platform
-[url "git@github.com:"]
-	insteadOf = https://github.com/
+[url "https://github.com/"]
+	insteadOf = git@github.com:
+	insteadOf = ssh://git@github.com/
 [commit]
 	gpgsign = true
 [init]
