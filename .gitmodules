@@ -1,3 +1,9 @@
 [submodule "third_party/dircolors-solarized"]
 	path = third_party/dircolors-solarized
 	url = https://github.com/seebi/dircolors-solarized.git
+[submodule "third_party/tmux-resurrect"]
+	path = third_party/tmux-resurrect
+	url = https://github.com/tmux-plugins/tmux-resurrect
+[submodule "third_party/tmux-continuum"]
+	path = third_party/tmux-continuum
+	url = https://github.com/tmux-plugins/tmux-continuum
