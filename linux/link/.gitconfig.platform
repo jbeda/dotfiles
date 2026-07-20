@@ -2,10 +2,13 @@
   helper = cache --timeout=3600
 
 [user]
-  # Public-key literal rather than a file path: no key lives on this box; the
-  # private half is reached through an ssh-agent forwarded from the client, and
-  # git's ssh signing uses the literal to select the key from the agent.
-  signingkey = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDWb0q63fqsn8DPKFZa2HxMeO7uhiM7npgJXDCAv4DId jbeda-mbp-2021-12 ed25519
+  # Per-machine local signing key so signing never depends on a forwarded
+  # ssh-agent (which dies when the client disconnects, breaking unattended
+  # commits in tmux). Generate once per box and register on GitHub as a
+  # signing key:
+  #   ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_signing -N "" -C "$(hostname) git signing"
+  #   gh ssh-key add ~/.ssh/id_ed25519_signing.pub --type signing --title "$(hostname) git signing"
+  signingkey = ~/.ssh/id_ed25519_signing.pub
 
 # GitHub over https authenticates through gh (transport forced to https by the
 # url.insteadOf rewrite in .gitconfig). The empty helper resets the global
