@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+#
+# setup-mac -- one-shot installer for the Mac side of the mac-bridge.
+# Run this ON THE MAC (the SSH client). Idempotent; safe to re-run.
+#
+#   ./setup-mac [ssh-host-alias]
+#
+# It installs + loads the launchd listener, migrates the old browser-bridge
+# agent if present, self-tests the socket, and prints the ssh config block to
+# add by hand. An optional Host alias (e.g. `./setup-mac claudes-plan`) is only
+# used to make the printed hint concrete; it never edits any files.
+set -euo pipefail
+
+PORT=17603
+LABEL="com.jbeda.mac-bridge"
+OLD_LABEL="com.jbeda.browser-bridge"   # pre-unification name; migrated below
+here="$(cd "$(dirname "$0")" && pwd)"
+plist_src="$here/$LABEL.plist"
+plist_dest="$HOME/Library/LaunchAgents/$LABEL.plist"
+ssh_host="${1:-}"
+
+say()  { printf '\033[1;32m✔\033[0m  %s\n' "$1"; }
+info() { printf '\033[1;33m➜\033[0m  %s\n' "$1"; }
+die()  { printf '\033[1;31m✖\033[0m  %s\n' "$1" >&2; exit 1; }
+
+[[ "$(uname -s)" == "Darwin" ]] || die "This is the Mac side; run it on macOS."
+[[ -f "$plist_src" ]] || die "Can't find $plist_src"
+
+# --- 0. Migrate the old browser-bridge agent, if it's still around ------
+# It listened on the same port, so leaving it loaded would fight for the socket.
+old_dest="$HOME/Library/LaunchAgents/$OLD_LABEL.plist"
+if [[ -e "$old_dest" || -L "$old_dest" ]]; then
+  launchctl unload "$old_dest" 2>/dev/null || true
+  rm -f "$old_dest"
+  say "Removed old $OLD_LABEL agent (unified into $LABEL)"
+fi
+
+# --- 1. Install + (re)load the launchd listener -------------------------
+mkdir -p "$HOME/Library/LaunchAgents"
+ln -sfn "$plist_src" "$plist_dest"
+say "Linked $plist_dest"
+
+launchctl unload "$plist_dest" 2>/dev/null || true
+launchctl load "$plist_dest"
+say "Loaded launchd agent $LABEL"
+
+# --- 2. Self-test the socket (nothing opened) ---------------------------
+# A zero-I/O connect proves launchd is listening; the handler reads EOF, sees an
+# empty verb, and dispatches nothing.
+if nc -z 127.0.0.1 "$PORT" 2>/dev/null; then
+  say "Listener answering on 127.0.0.1:$PORT"
+else
+  die "Nothing answered on 127.0.0.1:$PORT -- check: launchctl list | grep mac-bridge"
+fi
+
+# --- 3. Print the ssh config block to add by hand -----------------------
+# Editing ~/.ssh/config automatically is fiddly (multi-name Host lines, merging
+# into an existing block), and this is a rare one-time step -- so just print the
+# lines and let you drop them into the right block yourself.
+#
+# RemoteForward carries the bridge back to this Mac. ControlMaster multiplexes
+# all ssh to the box onto one connection, which (a) makes `code --remote` and any
+# `ssh -O forward -L ...` dev-server tunnels instant, and (b) stops a second ssh
+# session from fighting over the RemoteForward port.
+info "Add these lines to your box's block in ~/.ssh/config:"
+cat <<EOF
+
+    ControlMaster auto
+    ControlPath ~/.ssh/cm-%C
+    ControlPersist 10m
+    RemoteForward $PORT 127.0.0.1:$PORT
+
+EOF
+info "Put them inside the existing 'Host ${ssh_host:-<your-remote-alias>}' block"
+info "(don't create a second block), then reconnect your SSH session to apply."
+info "Also install VS Code's 'code' CLI on PATH (Command Palette -> Shell Command:"
+info "Install 'code' command in PATH) and the Remote - SSH extension."
+
+say "Done. From the box:  browse https://example.com   |   code-mac [dir]"

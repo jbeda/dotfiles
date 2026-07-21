@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+#
+# code-mac -- open a directory (or file) on THIS box in VS Code on your Mac,
+# over the reverse-SSH bridge.
+#
+# Sends "code<TAB><host><TAB><abs-path>" to 127.0.0.1:$MAC_BRIDGE_PORT, where an
+# SSH RemoteForward tunnels it to the launchd listener on the Mac, which runs
+#   code --remote ssh-remote+<host> <abs-path>
+# VS Code on the Mac then opens its own SSH connection back to <host> and
+# attaches to that path. See darwin/mac-bridge/ for the Mac side + ssh config.
+#
+#   code-mac [path]     # default: $PWD
+#
+# <host> is $MAC_SSH_HOST (the ssh Host alias the Mac uses to reach this box),
+# set in linux/source/50_mac_bridge.sh; override in ~/.zsh.local if needed.
+set -euo pipefail
+
+port="${MAC_BRIDGE_PORT:-17603}"
+host="${MAC_SSH_HOST:-$(hostname -s)}"
+target="${1:-$PWD}"
+
+# Resolve to an absolute path (VS Code's --remote wants one). Handles both a
+# directory and a file that lives in an existing directory.
+if [[ -d "$target" ]]; then
+  abs="$(cd "$target" && pwd)"
+elif [[ -e "$target" || -d "$(dirname "$target")" ]]; then
+  abs="$(cd "$(dirname "$target")" && pwd)/$(basename "$target")"
+else
+  echo "code-mac: no such path: $target" >&2
+  exit 1
+fi
+
+if ! exec 3<>"/dev/tcp/127.0.0.1/${port}" 2>/dev/null; then
+  echo "code-mac: nothing is listening on 127.0.0.1:${port}." >&2
+  echo "          Is the SSH RemoteForward active and the Mac listener loaded?" >&2
+  echo "          See ~/src/dotfiles/darwin/mac-bridge/README.md" >&2
+  exit 1
+fi
+
+printf 'code\t%s\t%s\n' "$host" "$abs" >&3
+exec 3>&-
+echo "code-mac: asked your Mac to open VS Code on ${host}:${abs}"

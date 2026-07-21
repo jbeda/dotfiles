@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>com.jbeda.browser-bridge</string>
+  <string>com.jbeda.mac-bridge</string>
 
   <!-- inetd-style: launchd listens on the socket, accepts each connection,
        and runs the program once per connection with the socket wired to
@@ -31,13 +31,17 @@
     </dict>
   </dict>
 
-  <!-- Read one line (the URL) from the socket and open it. Only http/https are
-       honored, so a stray connection can't `open` file:// or app-scheme URLs. -->
+  <!-- Read one tab-separated request line ("verb TAB args") from the socket and
+       dispatch it. Only two verbs are honored, each with strict validation, so a
+       stray local connection can't run arbitrary commands.
+         open URL      : only http/https, then run `open URL`
+         code HOST PATH: HOST must be a bare ssh-alias and PATH absolute, then
+                         run VS Code's `code` CLI with `remote ssh-remote+HOST PATH` -->
   <key>ProgramArguments</key>
   <array>
     <string>/bin/sh</string>
     <string>-c</string>
-    <string>IFS= read -r url; case "$url" in http://*|https://*) exec /usr/bin/open "$url";; esac</string>
+    <string>tab=$(printf '\t'); IFS=$tab read -r verb a1 a2 || exit 0; case "$verb" in open) case "$a1" in http://*|https://*) exec /usr/bin/open "$a1";; esac ;; code) case "$a1" in ''|*[!A-Za-z0-9._-]*) exit 0;; esac; case "$a2" in /*) ;; *) exit 0;; esac; PATH="/usr/local/bin:/opt/homebrew/bin:$HOME/.local/bin:$PATH"; exec code --remote "ssh-remote+$a1" "$a2" ;; esac</string>
   </array>
 </dict>
 </plist>
