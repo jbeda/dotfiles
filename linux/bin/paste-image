@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+#
+# paste-image -- pull the Mac's clipboard image onto THIS box and print its
+# path, for handing to Claude Code (which loads an image from a plain file
+# path typed into the prompt -- no drag-drop/clipboard needed).
+#
+# Over the reverse-SSH bridge: sends "clip-image<TAB><host><TAB><dest>" to
+# 127.0.0.1:$MAC_BRIDGE_PORT, where an SSH RemoteForward tunnels it to the
+# launchd listener on the Mac. That listener runs `pngpaste` to dump the
+# clipboard image to a temp PNG, then scp's it back to <host>:<dest> (its own
+# ssh to this box, exactly like the `code` verb). We poll until the file lands,
+# then print its path. See darwin/mac-bridge/ for the Mac side + ssh config.
+#
+#   paste-image           # print a friendly line (stderr) + the path (stdout)
+#   paste-image --quiet   # print ONLY the path -- used by the `C-Spc i` tmux bind
+#
+# <host> is $MAC_SSH_HOST (the ssh Host alias the Mac uses to reach this box),
+# set in linux/source/50_mac_bridge.sh; override in ~/.zsh.local if needed.
+set -euo pipefail
+
+quiet=false
+case "${1:-}" in -q|--quiet) quiet=true ;; esac
+
+port="${MAC_BRIDGE_PORT:-17603}"
+host="${MAC_SSH_HOST:-$(hostname -s)}"
+
+dir="${XDG_CACHE_HOME:-$HOME/.cache}/mac-clip"
+mkdir -p "$dir"
+dest="$dir/$(date +%Y%m%d-%H%M%S)-$$.png"
+
+log() { $quiet || printf 'paste-image: %s\n' "$*" >&2; }
+
+if ! exec 3<>"/dev/tcp/127.0.0.1/${port}" 2>/dev/null; then
+  log "nothing is listening on 127.0.0.1:${port} -- is the SSH RemoteForward up"
+  log "and the Mac listener loaded? see ~/src/dotfiles/darwin/mac-bridge/README.md"
+  exit 1
+fi
+
+printf 'clip-image\t%s\t%s\n' "$host" "$dest" >&3
+exec 3>&-
+
+# Wait for the scp'd file to arrive AND settle. scp writes straight to $dest
+# (no atomic rename), so a naive "file exists" check can catch a partial write.
+# Once it's non-empty, sample the size, wait, and resample: equal => done.
+# A real image (pngpaste + scp over the persistent ssh master) lands in well
+# under a second; this ceiling only bites when nothing is coming (no clipboard
+# image, or the Mac listener doesn't know the verb), so keep it short -- with
+# the tmux `C-Spc i` bind it's how long the pane appears to freeze on a misfire.
+for _ in $(seq 1 40); do          # ~4s ceiling (40 * 0.1s when no file appears)
+  if [[ -s "$dest" ]]; then
+    s1=$(stat -c %s "$dest" 2>/dev/null || echo a)
+    sleep 0.15
+    s2=$(stat -c %s "$dest" 2>/dev/null || echo b)
+    [[ "$s1" == "$s2" ]] && break
+  else
+    sleep 0.1
+  fi
+done
+
+if [[ ! -s "$dest" ]]; then
+  rm -f "$dest"
+  log "no image arrived -- is there actually an image on the Mac clipboard?"
+  log "(pngpaste needs a real image, not text; nothing to do if the clipboard is text)"
+  exit 1
+fi
+
+log "image saved to $dest"
+printf '%s\n' "$dest"

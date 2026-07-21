@@ -31,17 +31,18 @@
     </dict>
   </dict>
 
-  <!-- Read one tab-separated request line ("verb TAB args") from the socket and
-       dispatch it. Only two verbs are honored, each with strict validation, so a
-       stray local connection can't run arbitrary commands.
-         open URL      : only http/https, then run `open URL`
-         code HOST PATH: HOST must be a bare ssh-alias and PATH absolute, then
-                         run VS Code's `code` CLI with `remote ssh-remote+HOST PATH` -->
+  <!-- Hand each accepted connection to the on-disk dispatch script, which reads
+       one tab-separated request line ("verb TAB args") off the socket (stdin)
+       and validates + runs it. The logic lives in ./dispatch (three verbs:
+       open / code / clip-image) rather than inline here so it stays readable and
+       lintable. We exec it via $HOME (expanded by sh) so the plist needn't
+       hardcode an absolute home path; it assumes the repo is at ~/src/dotfiles,
+       same as the resurrect/continuum hooks in .tmux.conf. -->
   <key>ProgramArguments</key>
   <array>
     <string>/bin/sh</string>
     <string>-c</string>
-    <string>tab=$(printf '\t'); IFS=$tab read -r verb a1 a2 || exit 0; case "$verb" in open) case "$a1" in http://*|https://*) exec /usr/bin/open "$a1";; esac ;; code) case "$a1" in ''|*[!A-Za-z0-9._-]*) exit 0;; esac; case "$a2" in /*) ;; *) exit 0;; esac; PATH="/usr/local/bin:/opt/homebrew/bin:$HOME/.local/bin:$PATH"; exec code --remote "ssh-remote+$a1" "$a2" ;; esac</string>
+    <string>exec "$HOME/src/dotfiles/darwin/mac-bridge/dispatch"</string>
   </array>
 </dict>
 </plist>

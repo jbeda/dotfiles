@@ -1,0 +1,65 @@
+#!/bin/sh
+# mac-bridge dispatch -- request handler for the reverse-SSH bridge listener.
+#
+# launchd (com.jbeda.mac-bridge.plist, inetd-style) accepts each connection on
+# 127.0.0.1:17603 and runs this once, with the socket wired to stdin/stdout. We
+# read ONE tab-separated request line ("verb<TAB>a1<TAB>a2") and dispatch it.
+# Requests arrive over an SSH RemoteForward from the Linux box; see the
+# README.md next to this file for the full picture and the box-side senders
+# (linux/bin/{browse,code-mac,paste-image}).
+#
+# Security: every verb validates its args before running anything, so a stray
+# local process connecting to the port can't run arbitrary commands. The whole
+# surface is "open a web URL", "open VS Code on an ssh host", and "scp the
+# clipboard image to an ssh host".
+
+# code / pngpaste / etc. aren't on launchd's bare PATH; add the usual spots.
+PATH="/usr/local/bin:/opt/homebrew/bin:$HOME/.local/bin:$PATH"
+export PATH
+
+# A bare ssh Host alias: letters, digits, dot, underscore, hyphen -- nothing a
+# shell would treat specially where we splice it into `ssh-remote+HOST` / `HOST:`.
+is_alias() {
+  case "$1" in
+    '' | *[!A-Za-z0-9._-]*) return 1 ;;
+    *) return 0 ;;
+  esac
+}
+
+is_abspath() {
+  case "$1" in
+    /*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+tab=$(printf '\t')
+IFS=$tab read -r verb a1 a2 || exit 0
+
+case "$verb" in
+  # a1 = URL. Only http/https -- no file:// or app-scheme URLs.
+  open)
+    case "$a1" in
+      http://* | https://*) exec /usr/bin/open "$a1" ;;
+    esac
+    ;;
+
+  # a1 = ssh Host alias, a2 = absolute dir/file on that host. Open VS Code on
+  # the Mac attached to it; VS Code makes its own ssh back to the host.
+  code)
+    is_alias "$a1" && is_abspath "$a2" || exit 0
+    exec code --remote "ssh-remote+$a1" "$a2"
+    ;;
+
+  # a1 = ssh Host alias, a2 = absolute dest path on that host. Dump the Mac's
+  # clipboard image to a temp PNG and scp it to a1:a2 (our own ssh back to the
+  # box, like `code`). No image on the clipboard -> pngpaste fails -> send
+  # nothing, and the box-side poller times out with a "no image" message.
+  clip-image)
+    is_alias "$a1" && is_abspath "$a2" || exit 0
+    tmp="${TMPDIR:-/tmp}/macclip.$$.png"
+    pngpaste "$tmp" || exit 0
+    scp -q -- "$tmp" "$a1:$a2"
+    rm -f "$tmp"
+    ;;
+esac

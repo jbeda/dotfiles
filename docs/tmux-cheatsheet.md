@@ -64,6 +64,24 @@ Copied text goes to your **Mac clipboard** via OSC 52 (thanks to
 > tmux's buffer, not the OS clipboard. To make a *native* Ghostty selection
 > (e.g. to copy with ⌘C), **hold Shift while dragging**.
 
+## Paste a Mac clipboard image (over SSH) ⭐
+
+Not really tmux, but it lives as a tmux binding. On the headless box you can't
+paste a screenshot into Claude Code the normal way — the clipboard is on your
+Mac, and Claude Code (running here) can't see it. This bridges it:
+
+| Action | Keys |
+| --- | --- |
+| Pull Mac clipboard image → type its path into this pane | `C-Spc i` ⭐ |
+
+Copy/screenshot an image on the **Mac**, then press `C-Spc i` in the pane where
+Claude Code is waiting. It runs `paste-image` over the reverse mac-bridge (Mac
+`pngpaste` → `scp` back here), then types the saved file **path** into the
+prompt. Add your question and send — Claude Code loads an image from a plain
+path. Brief pause during the round-trip; if the clipboard has no image (or the
+bridge is down) it types nothing and flashes a message. From a shell you can
+also just run `paste-image` to get the path. See `darwin/mac-bridge/README.md`.
+
 ## Session & misc
 
 | Action | Keys |

@@ -41,6 +41,10 @@ if launchctl bootout "gui/$(id -u)/$OLD_LABEL" 2>/dev/null; then
 fi
 
 # --- 1. Install + (re)load the launchd listener -------------------------
+# The plist just execs ./dispatch; make sure it's runnable (git preserves the
+# bit, but a fresh copy/edit might not).
+chmod +x "$here/dispatch" 2>/dev/null || true
+
 mkdir -p "$HOME/Library/LaunchAgents"
 ln -sfn "$plist_src" "$plist_dest"
 say "Linked $plist_dest"
@@ -81,4 +85,13 @@ info "(don't create a second block), then reconnect your SSH session to apply."
 info "Also install VS Code's 'code' CLI on PATH (Command Palette -> Shell Command:"
 info "Install 'code' command in PATH) and the Remote - SSH extension."
 
-say "Done. From the box:  browse https://example.com   |   code-mac [dir]"
+# --- 4. Dependency check for the clip-image verb ------------------------
+# `paste-image` (box) -> clip-image (here) needs pngpaste to read the clipboard.
+if command -v pngpaste >/dev/null 2>&1; then
+  say "pngpaste found -- the clip-image verb (box: paste-image) will work"
+else
+  info "pngpaste NOT found -- 'paste-image' from the box won't work until you:"
+  info "  brew install pngpaste"
+fi
+
+say "Done. From the box:  browse <url>  |  code-mac [dir]  |  paste-image (C-Spc i in tmux)"

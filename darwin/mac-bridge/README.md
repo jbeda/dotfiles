@@ -2,24 +2,39 @@
 
 Reach back to your **Mac** from an SSH session on this Linux box, over a single
 reverse-forwarded port. One launchd listener on the Mac reads one
-`verb<TAB>args` line and dispatches it. Two verbs today:
+`verb<TAB>args` line and dispatches it (via the on-disk `dispatch` script — see
+below). Three verbs today:
 
 - **`open <url>`** — open a URL in the Mac browser (`linux/bin/browse`)
 - **`code <host> <path>`** — open VS Code on the Mac attached to a dir on this
   box, via `code --remote ssh-remote+<host> <path>` (`linux/bin/code-mac`)
+- **`clip-image <host> <path>`** — grab the Mac's clipboard image (`pngpaste`)
+  and `scp` it to `<host>:<path>` on the box, so you can hand the path to
+  Claude Code, which loads an image from a plain path (`linux/bin/paste-image`,
+  bound to `C-Spc i` in tmux)
 
 ```
-box `browse <url>` / `code-mac <dir>`  ──writes "verb<TAB>args"──▶  127.0.0.1:17603 (box)
+box browse/code-mac/paste-image  ──writes "verb<TAB>args"──▶  127.0.0.1:17603 (box)
         │ SSH RemoteForward tunnels the port back to the Mac
         ▼
-   127.0.0.1:17603 (Mac) ──launchd──▶  open <url>   |   code --remote ssh-remote+<host> <path>
+   127.0.0.1:17603 (Mac) ──launchd──▶ dispatch: open <url> | code … | scp clipboard.png
 ```
 
-Note the two verbs use the tunnel differently. `open` is fully served over the
-reverse tunnel. `code` only uses it as a **trigger**: VS Code then opens its
-*own* fresh SSH connection from the Mac to `<host>` and does the editing over
-that — so the Mac must be able to `ssh <host>` directly (it already can, that's
-how you log into the box).
+The verbs use the tunnel differently. `open` is fully served over the reverse
+tunnel. `code` and `clip-image` use it only as a **trigger**: the Mac then opens
+its *own* fresh SSH connection back to `<host>` — VS Code's `--remote` for
+`code`, `scp` for `clip-image` — so the Mac must be able to `ssh <host>`
+directly (it already can, that's how you log into the box).
+
+### The dispatch script
+
+The launchd plist stays a trivial static stub: it just
+`exec "$HOME/src/dotfiles/darwin/mac-bridge/dispatch"` and hands that script the
+socket on stdin/stdout. All the request parsing, per-verb validation, and the
+actual commands live in `dispatch` (a normal `/bin/sh` script) so they're
+readable and `shellcheck`-able instead of crammed into an XML string. Add or
+change a verb there, not in the plist. (`clip-image` needs `pngpaste`:
+`brew install pngpaste`.)
 
 The Linux side (`linux/bin/browse`, `linux/bin/code-mac`,
 `linux/source/50_mac_bridge.sh`) installs with the normal `./install` (which
@@ -66,13 +81,26 @@ For the `code` verb you also need, on the Mac:
   'code' command in PATH*.
 - The **Remote - SSH** extension (`ms-vscode-remote.remote-ssh`).
 
+For the `clip-image` verb you also need, on the Mac:
+
+- **`pngpaste`** — `brew install pngpaste`. It reads the clipboard image;
+  without it, `paste-image` from the box just times out with "no image".
+
 Finally **reconnect** your SSH session and, from the Linux box:
 
 ```sh
 browse https://example.com     # opens in the Mac browser
 code-mac                       # opens VS Code on the Mac, attached to $PWD here
 code-mac ~/src/someproject     # ...attached to that dir
+paste-image                    # pull the Mac clipboard image here, print its path
 ```
+
+For images, the ergonomic entry point is the tmux binding **`C-Spc i`**: it runs
+`paste-image` and types the resulting path straight into the current pane — e.g.
+into a Claude Code prompt, which loads an image from a plain path. Copy/screenshot
+an image on the Mac, press `C-Spc i`, and the path appears in your prompt; add
+your question and send. The round-trip blocks briefly; on no-image/bridge-down it
+types nothing and flashes a message.
 
 ### Which host does `code-mac` tell VS Code to use?
 
@@ -124,10 +152,11 @@ route through it automatically.
 
 ## Security
 
-The listener binds to `127.0.0.1` and only accepts two verbs, each validated:
-`open` runs `open` only for `http://` / `https://` URLs (no `file://` or
-app-scheme URLs); `code` requires the host to be a bare ssh-alias
-(`[A-Za-z0-9._-]`) and the path to be absolute before running `code --remote`.
-Any local process on the Mac could still drive these, but the surface is limited
-to "open a web URL" and "open VS Code on an ssh host" — both low-risk on a
-personal machine.
+The listener binds to `127.0.0.1` and only accepts three verbs, each validated
+in `dispatch`: `open` runs `open` only for `http://` / `https://` URLs (no
+`file://` or app-scheme URLs); `code` and `clip-image` both require the host to
+be a bare ssh-alias (`[A-Za-z0-9._-]`) and the path to be absolute before running
+`code --remote` / `scp`. Any local process on the Mac could still drive these,
+but the surface is limited to "open a web URL", "open VS Code on an ssh host",
+and "scp the clipboard image to an ssh host" — all low-risk on a personal
+machine.
