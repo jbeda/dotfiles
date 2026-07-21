@@ -89,6 +89,41 @@ function link_bin() {
   done
 }
 
+# Link config files into ~/.config, mirroring the tree under config/ and the
+# platform-specific $platform/config/ (e.g. darwin/config/ghostty/config ->
+# ~/.config/ghostty/config). Directories are created for real -- ~/.config is
+# shared with plenty of unmanaged tools -- and only leaf files are symlinked.
+function link_config() {
+  local dir entry file rel dest
+  local entries=()
+  for dir in "$dotfile_base/config" "$dotfile_base/$platform/config"; do
+    [[ -d "$dir" ]] || continue
+    while IFS= read -r -d '' file; do
+      entries+=("$dir|$file")
+    done < <(find "$dir" -type f -print0)
+  done
+  if (( ${#entries[@]} == 0 )); then return; fi
+  e_header "Linking files into ~/.config"
+  for entry in "${entries[@]}"; do
+    dir="${entry%%|*}"; file="${entry#*|}"
+    rel="${file#$dir/}"
+    dest="$HOME/.config/$rel"
+    if [[ "$file" -ef "$dest" ]]; then
+      e_error "Skipping ~/.config/$rel, same file."
+      continue
+    fi
+    if [[ -e "$dest" ]]; then
+      e_arrow "Backing up ~/.config/$rel."
+      backup=1
+      [[ -e "$backup_dir" ]] || mkdir -p "$backup_dir"
+      mv "$dest" "$backup_dir"
+    fi
+    mkdir -p "$(dirname "$dest")"
+    e_success "Linking ~/.config/$rel."
+    ln -sf "$file" "$dest"
+  done
+}
+
 # Tweak file globbing.
 shopt -s dotglob
 shopt -s nullglob
@@ -98,6 +133,7 @@ platform=$(echo $(uname -s) | tr '[:upper:]' '[:lower:]')
 do_stuff "link" "$dotfile_base/link"
 [ -d "$dotfile_base/$platform/link" ] && do_stuff "link" "$dotfile_base/$platform/link"
 link_bin
+link_config
 
 # Alert if backups were made.
 if [[ "$backup" ]]; then

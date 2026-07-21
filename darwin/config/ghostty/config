@@ -1,0 +1,10 @@
+# Ghostty config -- symlinked to ~/.config/ghostty/config by ./install.
+# Reload in a running Ghostty with cmd+shift+, (or restart it).
+#
+# Note macOS also honors "$HOME/Library/Application Support/com.mitchellh.ghostty/config",
+# loaded AFTER this file, so anything set there silently wins. Keep that one absent.
+
+# Left Option sends Esc+key (Meta), so emacs-style M-w / M-b / M-f work in tmux
+# copy mode and zsh line editing. Right Option keeps composing special
+# characters (e.g. Option-8 for the bullet).
+macos-option-as-alt = left

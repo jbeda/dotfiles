@@ -14,6 +14,13 @@ There are no tests. Validate changes by sourcing the relevant script or opening 
 
 Files here are symlinked directly into `$HOME`. The install script detects the platform (Darwin or Linux) and processes both the generic `link/` and the platform-specific subdirectory. Platform-specific files override generic ones when both exist (e.g., `.gitconfig.platform` differs per OS for credential helpers).
 
+### XDG Config Layer (`config/`, `darwin/config/`, `linux/config/`)
+
+Trees here are mirrored into `~/.config`: directories are created as real
+directories (`~/.config` is shared with unmanaged tools), and only leaf files
+are symlinked (e.g. `darwin/config/ghostty/config` → `~/.config/ghostty/config`).
+Platform subdirectories install only on that platform.
+
 ### Shell Script Modules (`source/`, `darwin/source/`, `linux/source/`)
 
 `.zshrc` sources all `*.sh` files from `source/` (and the platform-specific source dir) in numeric order. Scripts are numbered to control load order:
