@@ -1,7 +1,8 @@
 # tmux cheat sheet
 
-Prefix is **`Ctrl-b`** (press and release, then the next key). Written below as
-`C-b`. Your `~/.tmux.conf` in this repo adds a few conveniences noted with ⭐.
+Prefix is **`Ctrl-Space`** ⭐ (press and release, then the next key). Written
+below as `C-Spc`. Your `~/.tmux.conf` in this repo adds a few conveniences
+noted with ⭐. Online cheat sheets assume the default `Ctrl-b` — mentally swap.
 
 ## The core workflow: attach / detach
 
@@ -12,7 +13,7 @@ after you disconnect.
 | --- | --- |
 | Start/attach a session named `main` | `ta` ⭐ (alias) or `tmux new -A -s main` |
 | Start a named session | `tmux new -s agent` |
-| Detach (leave it running) | `C-b d` |
+| Detach (leave it running) | `C-Spc d` |
 | List sessions | `tl` ⭐ or `tmux ls` |
 | Attach to a session | `tmux attach -t agent` |
 | Kill a session | `tmux kill-session -t agent` |
@@ -26,33 +27,33 @@ symlink, so existing panes keep working with your forwarded keys. Avoid
 
 | Action | Keys |
 | --- | --- |
-| New window | `C-b c` |
-| Next / previous window | `C-b n` / `C-b p` |
-| Jump to window N | `C-b 1` … `C-b 9` (windows start at 1 ⭐) |
-| Rename current window | `C-b ,` |
-| Window picker (visual) | `C-b w` |
-| Close window | `C-b &` (confirms) |
+| New window | `C-Spc c` |
+| Next / previous window | `C-Spc n` / `C-Spc p` |
+| Jump to window N | `C-Spc 1` … `C-Spc 9` (windows start at 1 ⭐) |
+| Rename current window | `C-Spc ,` |
+| Window picker (visual) | `C-Spc w` |
+| Close window | `C-Spc &` (confirms) |
 
 ## Panes (splits)
 
 | Action | Keys |
 | --- | --- |
-| Split left/right | `C-b %` or `C-b |` ⭐ (keeps current dir) |
-| Split top/bottom | `C-b "` or `C-b -` ⭐ (keeps current dir) |
-| Move between panes | `C-b ↑ ↓ ← →` |
-| Cycle panes | `C-b o` |
-| Zoom pane in/out (fullscreen toggle) | `C-b z` |
-| Resize pane | `C-b` then hold and repeat `C-↑ ↓ ← →` |
-| Convert pane to its own window | `C-b !` |
-| Close pane | `C-b x` (confirms) or type `exit` |
+| Split left/right | `C-Spc %` or `C-Spc |` ⭐ (keeps current dir) |
+| Split top/bottom | `C-Spc "` or `C-Spc -` ⭐ (keeps current dir) |
+| Move between panes | `C-Spc ↑ ↓ ← →` |
+| Cycle panes | `C-Spc o` |
+| Zoom pane in/out (fullscreen toggle) | `C-Spc z` |
+| Resize pane | `C-Spc` then hold and repeat `C-↑ ↓ ← →` |
+| Convert pane to its own window | `C-Spc !` |
+| Close pane | `C-Spc x` (confirms) or type `exit` |
 
 ## Copy / scroll mode
 
 | Action | Keys |
 | --- | --- |
-| Enter copy/scroll mode | `C-b [` |
+| Enter copy/scroll mode | `C-Spc [` |
 | Scroll | arrows / PgUp / PgDn, or **mouse wheel** (mouse is on) |
-| Start selection (emacs keys) | `C-Space`, move, `M-w` to copy |
+| Start selection (emacs keys) | `Space` ⭐, move, `M-w` to copy |
 | Search backward | `C-r` |
 | Quit copy mode | `q` |
 
@@ -67,12 +68,12 @@ Copied text goes to your **Mac clipboard** via OSC 52 (thanks to
 
 | Action | Keys |
 | --- | --- |
-| Reload config | `C-b r` ⭐ |
-| Command prompt (type any tmux command) | `C-b :` |
-| Rename session | `C-b $` |
-| Session picker (visual) | `C-b s` |
-| List all key bindings | `C-b ?` |
-| Show a big clock | `C-b t` |
+| Reload config | `C-Spc r` ⭐ |
+| Command prompt (type any tmux command) | `C-Spc :` |
+| Rename session | `C-Spc $` |
+| Session picker (visual) | `C-Spc s` |
+| List all key bindings | `C-Spc ?` |
+| Show a big clock | `C-Spc t` |
 
 ## Persistence across reboots (resurrect + continuum) ⭐
 
@@ -81,18 +82,20 @@ These plugins add recovery across a **reboot or tmux-server restart**.
 
 | Action | Keys |
 | --- | --- |
-| Save layout now | `C-b C-s` |
-| Restore last saved layout | `C-b C-r` |
+| Save layout now | `C-Spc C-s` |
+| Restore last saved layout | `C-Spc C-r` |
 
 Continuum autosaves every 15 min and **auto-restores on tmux startup**, so
 after a reboot your windows/panes/cwd come back on their own. Caveat: a reboot
 kills running processes (agents too) — the plugins restore the *layout and
 shells*, not a live process's memory. Relaunch the agent in the restored pane.
 
-## Sending a literal `C-b` to the shell
+## Sending a literal `Ctrl-Space` to the shell
 
-Because the prefix is `C-b` (which is also emacs "back one char"), press
-**`C-b C-b`** to send a single `Ctrl-b` through to the program underneath.
+Because the prefix is `C-Spc` (which is also emacs/readline "set mark"), press
+**`C-Spc C-Spc`** to send a single `Ctrl-Space` through to the program
+underneath. Same reason `Space` (not `C-Spc`) starts a selection in copy mode:
+the prefix always wins over copy-mode bindings.
 
 ## Handy from-the-shell commands
 
@@ -108,5 +111,5 @@ tmux source-file ~/.tmux.conf   # reload config outside tmux
 ## Learn more
 
 - `man tmux` — the authoritative reference (long but searchable).
-- `C-b ?` inside tmux — live list of every current binding.
+- `C-Spc ?` inside tmux — live list of every current binding.
 - Official wiki: https://github.com/tmux/tmux/wiki
