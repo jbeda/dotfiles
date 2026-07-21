@@ -4,9 +4,9 @@ Reach back to your **Mac** from an SSH session on this Linux box, over a single
 reverse-forwarded port. One launchd listener on the Mac reads one
 `verb<TAB>args` line and dispatches it. Two verbs today:
 
-- **`open <url>`** — open a URL in the Mac browser (`bin/browse`)
+- **`open <url>`** — open a URL in the Mac browser (`linux/bin/browse`)
 - **`code <host> <path>`** — open VS Code on the Mac attached to a dir on this
-  box, via `code --remote ssh-remote+<host> <path>` (`bin/code-mac`)
+  box, via `code --remote ssh-remote+<host> <path>` (`linux/bin/code-mac`)
 
 ```
 box `browse <url>` / `code-mac <dir>`  ──writes "verb<TAB>args"──▶  127.0.0.1:17603 (box)
@@ -21,9 +21,10 @@ reverse tunnel. `code` only uses it as a **trigger**: VS Code then opens its
 that — so the Mac must be able to `ssh <host>` directly (it already can, that's
 how you log into the box).
 
-The Linux side (`bin/browse`, `bin/code-mac`, `linux/source/50_mac_bridge.sh`)
-installs with the normal `./install` (linking the `bin/` scripts into
-`~/.local/bin`). The Mac side is a one-time setup, scripted below.
+The Linux side (`linux/bin/browse`, `linux/bin/code-mac`,
+`linux/source/50_mac_bridge.sh`) installs with the normal `./install` (which
+links `linux/bin/` into `~/.local/bin` only on Linux). The Mac side is a
+one-time setup, scripted below.
 
 ## Mac setup (run on the Mac, once)
 

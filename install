@@ -59,9 +59,14 @@ function link_do() {
 }
 
 # Link individual bin files into ~/.local/bin (keeps it a real dir so other
-# tools -- pip/pipx/uv --user -- can write there too).
+# tools -- pip/pipx/uv --user -- can write there too). Sources both the generic
+# bin/ and the platform-specific $platform/bin/ (e.g. linux/bin holds the
+# remote-side reverse-bridge tools that make no sense on the Mac).
 function link_bin() {
-  local files=($dotfile_base/bin/*)
+  local dir files=()
+  for dir in "$dotfile_base/bin" "$dotfile_base/$platform/bin"; do
+    [[ -d "$dir" ]] && files+=("$dir"/*)
+  done
   if (( ${#files[@]} == 0 )); then return; fi
   local bindir="$HOME/.local/bin"
   e_header "Linking files into ~/.local/bin"

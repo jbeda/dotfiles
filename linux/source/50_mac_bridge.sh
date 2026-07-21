@@ -4,7 +4,7 @@
 #
 # A single launchd listener on the SSH *client* (your Mac) reads one
 # "verb<TAB>args" line off a reverse-forwarded port and dispatches it:
-#   open <url>          -> open the URL in the Mac browser      (bin/browse)
+#   open <url>          -> open the URL in the Mac browser      (linux/bin/browse)
 #   code <host> <path>  -> code --remote ssh-remote+<host> <path> on the Mac
 #                          i.e. VS Code on the Mac, attached to a dir here
 # Mac side + ssh config: darwin/mac-bridge/.
