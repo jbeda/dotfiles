@@ -30,7 +30,11 @@ dest="$dir/$(date +%Y%m%d-%H%M%S)-$$.png"
 
 log() { $quiet || printf 'paste-image: %s\n' "$*" >&2; }
 
-if ! exec 3<>"/dev/tcp/127.0.0.1/${port}" 2>/dev/null; then
+# Brace-group the exec so 2>/dev/null is in force *before* the /dev/tcp open is
+# attempted -- otherwise bash prints its own "connect: Connection refused" to the
+# still-live stderr (redirections are applied left-to-right). fd 3 stays open in
+# this shell (a brace group is not a subshell) when the connect succeeds.
+if ! { exec 3<>"/dev/tcp/127.0.0.1/${port}"; } 2>/dev/null; then
   log "nothing is listening on 127.0.0.1:${port} -- is the SSH RemoteForward up"
   log "and the Mac listener loaded? see ~/src/dotfiles/darwin/mac-bridge/README.md"
   exit 1
