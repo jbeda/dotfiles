@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.jbeda.mac-bridge-tunnel</string>
+
+  <!-- A long-running reverse-SSH tunnel dedicated to the mac-bridge port
+       (17603), kept alive at two layers: autossh restarts the inner ssh when
+       ServerAlive probes find the link dead (after sleep or a network change),
+       and launchd restarts autossh itself if it ever exits. This DECOUPLES the
+       bridge from your interactive / VS Code sessions — those still drop on
+       sleep or a home<->work roam, but the tunnel redials on its own, so
+       `code-mac` / `browse` / `paste-image` work whenever the Mac can reach the
+       box. The RemoteForward, ServerAliveInterval, and ExitOnForwardFailure all
+       live in the `claudes-plan-tunnel` Host block in ~/.ssh/config (see
+       README) so this plist stays trivial. -->
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/sh</string>
+    <string>-c</string>
+    <!-- -M 0: no autossh monitoring port; rely on the Host block's
+         ServerAliveInterval to detect a dead link. -N: no remote command, just
+         hold the forward. The `claudes-plan-tunnel` alias carries HostName,
+         RemoteForward 17603, and ExitOnForwardFailure yes. -->
+    <string>exec autossh -M 0 -N claudes-plan-tunnel</string>
+  </array>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <!-- launchd starts with a minimal PATH; add Homebrew (Apple Silicon and
+         Intel prefixes) so `autossh` and the `ssh` it spawns both resolve. -->
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    <!-- Restart the inner ssh even when it dies within the first seconds
+         (autossh's default 30s gate would otherwise make it give up on a
+         wake-from-sleep flap). 0 = always restart. -->
+    <key>AUTOSSH_GATETIME</key>
+    <string>0</string>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <!-- Don't hammer relaunches while the box is unreachable (e.g. Tailscale is
+       still re-establishing right after wake). -->
+  <key>ThrottleInterval</key>
+  <integer>15</integer>
+
+  <!-- Tunnel chatter + any autossh/ssh errors land here for debugging. -->
+  <key>StandardOutPath</key>
+  <string>/tmp/mac-bridge-tunnel.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/mac-bridge-tunnel.log</string>
+</dict>
+</plist>

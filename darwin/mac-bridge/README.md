@@ -15,7 +15,8 @@ below). Three verbs today:
 
 ```
 box browse/code-mac/paste-image  ──writes "verb<TAB>args"──▶  127.0.0.1:17603 (box)
-        │ SSH RemoteForward tunnels the port back to the Mac
+        │ a dedicated autossh reverse tunnel (RemoteForward) carries the port
+        │ back to the Mac and redials itself after sleep / a network change
         ▼
    127.0.0.1:17603 (Mac) ──launchd──▶ dispatch: open <url> | code … | scp clipboard.png
 ```
@@ -54,26 +55,49 @@ to reload after editing the plist).
 ~/src/dotfiles/darwin/mac-bridge/setup-mac claudes-plan   # alias is only for the printed hint
 ```
 
-Then add the printed lines **inside your existing host block** (don't create a
-second `Host` block — SSH accumulates these across matching blocks, but a
-per-name block only applies when you connect using that exact name):
+Then add the printed lines to `~/.ssh/config`. There are now **two** blocks —
+your normal interactive/VS Code block, and a dedicated tunnel block the
+always-on autossh job dials (see [Persistence](#persistence-across-sleep--roaming)):
 
 ```sshconfig
+# Interactive + VS Code. Keepalives so a dead link is detected and torn down
+# fast (no orphaned VS Code server / stale ControlMaster). NO RemoteForward here
+# — the tunnel block below owns port 17603; two owners collide on it.
 Host claudes-plan claudes-plan.h.bedafamily.com
     Hostname claudes-plan.h.bedafamily.com
     ForwardAgent yes
     ControlMaster auto
     ControlPath ~/.ssh/cm-%C
     ControlPersist 10m
+    ServerAliveInterval 20
+    ServerAliveCountMax 3
+    TCPKeepAlive yes
+
+# Dedicated bridge tunnel. autossh (via launchd) holds this open and redials it
+# after sleep / a network change. It owns the RemoteForward, dies loudly if it
+# can't bind the port (so autossh notices and restarts), and never multiplexes.
+Host claudes-plan-tunnel
+    HostName claudes-plan.h.bedafamily.com
+    ForwardAgent no
+    ControlMaster no
+    ControlPath none
     RemoteForward 17603 127.0.0.1:17603
+    ExitOnForwardFailure yes
+    ServerAliveInterval 20
+    ServerAliveCountMax 3
 ```
 
-`ControlMaster`/`ControlPath`/`ControlPersist` multiplex all ssh to the box onto
-one shared connection. That's not strictly required, but it makes `code --remote`
-(and any future `ssh -O forward -L …` dev-server tunnels) instant instead of
-re-handshaking, and it stops a second ssh session from fighting over the
-`RemoteForward` port. `%C` hashes user/host/port into a short socket name (macOS
-has a ~104-char limit on socket paths).
+> **Roaming gotcha:** `HostName` must resolve on *every* network you use. If
+> `…h.bedafamily.com` is home-only DNS, the tunnel won't reconnect at work — use
+> your **Tailscale MagicDNS name** (e.g. `claudes-plan`) as the `HostName` in both
+> blocks so it routes the same everywhere.
+
+`ControlMaster`/`ControlPath`/`ControlPersist` multiplex interactive + VS Code ssh
+onto one shared connection, which makes `code --remote` (and any `ssh -O forward
+-L …` dev-server tunnels) instant instead of re-handshaking. `%C` hashes
+user/host/port into a short socket name (macOS has a ~104-char socket-path limit).
+The tunnel block deliberately opts out of multiplexing (`ControlMaster no`) so it
+stays an independent, always-up connection.
 
 For the `code` verb you also need, on the Mac:
 
@@ -116,39 +140,96 @@ export MAC_SSH_HOST=claudes-plan
 
 If you'd rather not run the script:
 
-1. **Load the listener**
+1. **Load the listener + the always-on tunnel**
    ```sh
+   brew install autossh                       # the tunnel needs it
    mkdir -p ~/Library/LaunchAgents
-   ln -sf ~/src/dotfiles/darwin/mac-bridge/com.jbeda.mac-bridge.plist \
-          ~/Library/LaunchAgents/com.jbeda.mac-bridge.plist
-   launchctl load ~/Library/LaunchAgents/com.jbeda.mac-bridge.plist
-   launchctl list | grep mac-bridge          # should show the label
+   for L in com.jbeda.mac-bridge com.jbeda.mac-bridge-tunnel; do
+     ln -sf ~/src/dotfiles/darwin/mac-bridge/$L.plist ~/Library/LaunchAgents/$L.plist
+     launchctl load ~/Library/LaunchAgents/$L.plist
+   done
+   launchctl list | grep mac-bridge           # should show both labels
    ```
-2. **Forward the port + multiplex** — add the ssh config lines shown above.
-   `RemoteForward <remote-port> <mac-host:mac-port>` binds port 17603 on the
-   Linux box and tunnels it to `127.0.0.1:17603` on the Mac (loopback only).
+2. **Add the ssh config blocks shown above** — keepalives on the interactive
+   block (no `RemoteForward`), plus the dedicated `claudes-plan-tunnel` block
+   whose `RemoteForward 17603 127.0.0.1:17603` binds 17603 on the box and tunnels
+   it to `127.0.0.1:17603` on the Mac (loopback only). Add the box-side
+   `sshd_config.d/10-keepalive.conf` from
+   [Persistence](#persistence-across-sleep--roaming).
 
 Inside an SSH session, `open` and `xdg-open` are aliased to `browse` too, and
 `$BROWSER=browse`, so tools like `gh`, `python -m webbrowser`, and `xdg-open`
 route through it automatically.
 
+## Persistence across sleep / roaming
+
+A laptop that sleeps and moves between networks (home ↔ work) *will* drop its
+SSH/TCP sessions — nothing keeps a single connection alive across a multi-hour
+sleep plus an IP change. The goal is **auto-heal**, not immortality: each piece
+re-establishes itself instead of needing a manual re-ssh and stale-state cleanup.
+
+Three layers cooperate:
+
+1. **The bridge** — the `com.jbeda.mac-bridge-tunnel` launchd job runs
+   `autossh -M 0 -N claudes-plan-tunnel`. autossh restarts the inner ssh when the
+   Host block's `ServerAliveInterval` probes find the link dead; launchd restarts
+   autossh if it ever exits. So port 17603 is forwarded whenever the Mac can reach
+   the box, independent of any interactive or VS Code session. Needs
+   `brew install autossh`. Logs: `/tmp/mac-bridge-tunnel.log`.
+2. **Fast, clean teardown** — `ServerAliveInterval`/`ServerAliveCountMax` on the
+   Mac (both Host blocks) and matching `ClientAliveInterval`/`ClientAliveCountMax`
+   on the box's sshd declare a dead session in ~60s. That's what stops sleep/roam
+   drops from leaving an **orphaned VS Code server** or a **stale ControlMaster**
+   holding the port — the failure mode where "the terminal works but VS Code and
+   `code-mac` don't." Server side, one time:
+   ```sh
+   sudo tee /etc/ssh/sshd_config.d/10-keepalive.conf >/dev/null <<'CONF'
+   ClientAliveInterval 20
+   ClientAliveCountMax 3
+   TCPKeepAlive yes
+   CONF
+   sudo sshd -t && sudo systemctl reload ssh   # reload; existing sessions unaffected
+   ```
+3. **The terminal** — tmux already persists your work; you just reattach. The
+   `cplan` alias (`darwin/source/50_cplan.sh`) collapses "ssh in, then `ta`" into
+   one command, and does it via an *interactive* login so the box's SSH-agent
+   symlink gets re-pointed (a bare `ssh -t box tmux attach` skips that and breaks
+   box-side git auth).
+
+VS Code Remote-SSH still opens its own connection and can't survive a sleep
+transparently — but with the keepalives above, reconnect is fast and the
+"Kill VS Code Server on Host" dance becomes rare rather than routine.
+
 ## Troubleshooting
 
 - **`nothing is listening on 127.0.0.1:17603`** — the tunnel or the Mac listener
-  is down. Check `launchctl list | grep mac-bridge` on the Mac and confirm the
-  SSH session actually forwarded the port (`ss -tlnp | grep 17603` on the Linux
-  box should show a listener while connected).
+  is down. Check the tunnel: `launchctl list | grep mac-bridge-tunnel` (should
+  show the label with PID) and `tail /tmp/mac-bridge-tunnel.log`; a common cause
+  is autossh missing (`brew install autossh`) or the tunnel's `HostName` not
+  resolving on the current network (use the Tailscale name). Confirm the port is
+  bound on the box: `ss -tlnp | grep 17603` should show a listener. Check the
+  Mac listener with `launchctl list | grep mac-bridge`.
 - **`code-mac` opens nothing** — the listener got the trigger but `code --remote`
   failed on the Mac. Check the `code` CLI is on PATH and the Remote - SSH
   extension is installed, and that `MAC_SSH_HOST` matches a Host the Mac can ssh
   to. Test the underlying command directly on the Mac:
   `code --remote ssh-remote+claudes-plan /home/jbeda/src/dotfiles`.
-- **Port already in use on the remote** — a stale ssh session still holds the
-  RemoteForward. With `ControlMaster` this is rare (sessions share one
-  connection); otherwise use `ExitOnForwardFailure no` (default) so it's
-  non-fatal, or drop the stale connection.
-- **Change the port** — set it in three places: the plist `SockServiceName`, the
-  `RemoteForward` line, and `MAC_BRIDGE_PORT` in `linux/source/50_mac_bridge.sh`.
+- **Port already in use on the remote** — a stale ssh session still holds 17603,
+  so the tunnel's `ExitOnForwardFailure yes` makes autossh exit and retry without
+  ever binding. Usually it's a leftover interactive session that still has an old
+  `RemoteForward` line — remove `RemoteForward` from the interactive Host block
+  (only the tunnel block should have it), and drop the stale connection
+  (`ssh -O exit claudes-plan`, or find the holder on the box with
+  `ss -tlnp | grep 17603`).
+- **Tunnel flapping / won't stay up** — `tail -f /tmp/mac-bridge-tunnel.log`. If
+  auth fails, the launchd-run ssh can't read your key: make sure it's in the
+  keychain (`UseKeychain yes` + `AddKeysToAgent yes` in `~/.ssh/config`) so it
+  loads without an interactive agent. `launchctl kickstart -k gui/$(id -u)/com.jbeda.mac-bridge-tunnel`
+  forces a restart after fixing config.
+- **Change the port** — set it in four places: the plist `SockServiceName`, both
+  the interactive-block (removed) and tunnel-block `RemoteForward` line, the
+  `autossh` alias's `RemoteForward`, and `MAC_BRIDGE_PORT` in
+  `linux/source/50_mac_bridge.sh`.
 
 ## Security
 
