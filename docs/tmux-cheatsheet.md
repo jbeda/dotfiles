@@ -47,6 +47,26 @@ symlink, so existing panes keep working with your forwarded keys. Avoid
 | Convert pane to its own window | `C-Spc !` |
 | Close pane | `C-Spc x` (confirms) or type `exit` |
 
+## Two-pane Claude workspace: `cw` ⭐
+
+A shell helper (not a tmux binding) that opens a **new window** — leaving your
+current pane untouched — split into two side-by-side panes rooted in a
+directory: the left runs Claude Code via `cswap run`, the right is a plain
+shell. Focus lands on the Claude pane.
+
+| Command | What it does |
+| --- | --- |
+| `cw` | New window here; Claude via the dir's cswap-mapped account |
+| `cw 2` | …forcing cswap account `2` (overrides the mapping) |
+| `cw 2 ~/src/foo` | …account `2`, rooted in `~/src/foo` |
+| `cw ~/src/foo` | Mapped account, rooted in `~/src/foo` |
+
+The first argument is treated as the directory when it looks like a path;
+otherwise it's the cswap profile. Omitting the profile uses the directory's
+`cswap map` account, so map your projects once (`cswap map 2 ~/src/foo`) and a
+bare `cw` there just works. Must be run from inside tmux. See
+`source/50_tmux.sh`.
+
 ## Copy / scroll mode
 
 | Action | Keys |
