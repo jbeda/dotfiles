@@ -1,0 +1,619 @@
+<!--
+  Source of truth for the published Claude artifact:
+    https://claude.ai/code/artifact/9e41981b-5436-4fc2-97eb-fe18b33e1db4
+  To update: edit this file, then re-publish with the Artifact tool passing that
+  URL (same-conversation republishes of this file path keep the URL automatically).
+-->
+<title>terminal setup cheat sheet</title>
+<style>
+  :root {
+    --bg:        #f4f6f3;
+    --panel:     #ffffff;
+    --ink:       #1c2620;
+    --ink-soft:  #4a574f;
+    --ink-faint: #7c8a80;
+    --line:      #dbe2db;
+    --accent:    #2f6f4f;   /* pine, tmux-adjacent */
+    --accent-ink:#1d5238;
+    --star:      #b9761f;   /* amber for custom (⭐) bits */
+    --git:       #9b3d7a;   /* magenta — the color git status renders in */
+    --key-bg:    #ffffff;
+    --key-line:  #c7d0c8;
+    --key-shadow:#c7d0c8;
+    --key-ink:   #223029;
+    --radius:    10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:        #0e1512;
+      --panel:     #151d19;
+      --ink:       #e6ede8;
+      --ink-soft:  #a9b6ad;
+      --ink-faint: #6f7d73;
+      --line:      #26322b;
+      --accent:    #6fb98c;
+      --accent-ink:#8fd0a8;
+      --star:      #e0a353;
+      --git:       #d7a3c8;
+      --key-bg:    #1c261f;
+      --key-line:  #313e35;
+      --key-shadow:#0a0f0c;
+      --key-ink:   #dce6df;
+    }
+  }
+  :root[data-theme="light"] {
+    --bg:#f4f6f3; --panel:#ffffff; --ink:#1c2620; --ink-soft:#4a574f;
+    --ink-faint:#7c8a80; --line:#dbe2db; --accent:#2f6f4f; --accent-ink:#1d5238;
+    --star:#b9761f; --git:#9b3d7a; --key-bg:#ffffff; --key-line:#c7d0c8; --key-shadow:#c7d0c8; --key-ink:#223029;
+  }
+  :root[data-theme="dark"] {
+    --bg:#0e1512; --panel:#151d19; --ink:#e6ede8; --ink-soft:#a9b6ad;
+    --ink-faint:#6f7d73; --line:#26322b; --accent:#6fb98c; --accent-ink:#8fd0a8;
+    --star:#e0a353; --git:#d7a3c8; --key-bg:#1c261f; --key-line:#313e35; --key-shadow:#0a0f0c; --key-ink:#dce6df;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono {
+    font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  }
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: clamp(1.5rem, 4vw, 3.5rem) clamp(1rem, 4vw, 2rem) 4rem;
+  }
+
+  /* ---- header ---- */
+  header { margin-bottom: 2.25rem; }
+  .eyebrow {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: .72rem;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    margin: 0 0 .6rem;
+  }
+  h1 {
+    font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin: 0 0 .5rem;
+    text-wrap: balance;
+  }
+  h1 .cursor {
+    display: inline-block;
+    width: .55em; height: 1.05em;
+    background: var(--accent);
+    margin-left: .1em;
+    transform: translateY(.12em);
+    animation: blink 1.1s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { h1 .cursor { animation: none; } }
+  .lede {
+    color: var(--ink-soft);
+    max-width: 64ch;
+    font-size: 1.02rem;
+    margin: 0 0 1.2rem;
+  }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 1.2rem;
+    font-size: .85rem; color: var(--ink-soft);
+    align-items: center;
+  }
+  .legend b { color: var(--star); font-weight: 700; }
+
+  /* ---- band divider ---- */
+  .band {
+    grid-column: 1 / -1;
+    display: flex; align-items: center; gap: 1rem;
+    margin: 1.6rem 0 .1rem;
+  }
+  .band .t {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: .74rem; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--accent-ink);
+    white-space: nowrap;
+  }
+  .band .r { flex: 1; height: 1px; background: var(--line); }
+
+  /* ---- grid of cards ---- */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.1rem;
+    align-items: start;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.35rem 1.35rem;
+  }
+  .card.span2 { grid-column: 1 / -1; }
+  .card h2 {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: .95rem;
+    font-weight: 600;
+    letter-spacing: .01em;
+    margin: 0 0 .1rem;
+    display: flex; align-items: baseline; gap: .55rem;
+  }
+  .card h2 .idx { color: var(--accent); font-size: .8rem; }
+  .card .sub { color: var(--ink-faint); font-size: .82rem; margin: 0 0 1rem; }
+  .card h2 .tag { font-weight: 400; color: var(--ink-faint); font-size: .82rem; }
+
+  /* ---- rows ---- */
+  .row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: .75rem 1rem;
+    align-items: center;
+    padding: .48rem 0;
+    border-top: 1px solid var(--line);
+  }
+  .row:first-of-type { border-top: none; }
+  .row .label { font-size: .9rem; color: var(--ink); }
+  .row .label small { color: var(--ink-faint); display: block; font-size: .78rem; }
+  .keys { display: flex; gap: .3rem; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
+  .keys .sep { color: var(--ink-faint); font-size: .8rem; padding: 0 .1rem; }
+
+  /* ---- keycaps ---- */
+  kbd {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: .8rem;
+    line-height: 1;
+    color: var(--key-ink);
+    background: var(--key-bg);
+    border: 1px solid var(--key-line);
+    border-bottom-width: 2px;
+    border-radius: 6px;
+    padding: .32em .5em;
+    box-shadow: 0 1px 0 var(--key-shadow);
+    white-space: nowrap;
+  }
+  kbd.accent {
+    color: #fff;
+    background: var(--accent);
+    border-color: var(--accent-ink);
+    box-shadow: 0 1px 0 var(--accent-ink);
+  }
+  @media (prefers-color-scheme: dark) { kbd.accent { color: #0e1512; } }
+  :root[data-theme="dark"] kbd.accent { color: #0e1512; }
+  :root[data-theme="light"] kbd.accent { color: #ffffff; }
+  .star { color: var(--star); font-weight: 700; }
+
+  /* ---- faux terminal (deliberately dark in both themes) ---- */
+  .term {
+    background: #0e1512;
+    border: 1px solid #26322b;
+    border-radius: 8px;
+    padding: 1rem 1.1rem;
+    margin: 0 0 1.1rem;
+    overflow-x: auto;
+    font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    font-size: .86rem;
+    line-height: 1.85;
+    color: #e6ede8;
+    white-space: pre;
+  }
+  .t-time { color: #7c8a80; }
+  .t-host { color: #c58fd8; }
+  .t-dur  { color: #e0a353; }
+  .t-dir  { color: #6ea8e0; font-weight: 600; }
+  .t-git  { color: #d08fc0; }
+  .t-ok   { color: #6fb98c; font-weight: 700; }
+  .t-err  { color: #e0857f; font-weight: 700; }
+  .t-root { background: #c0392b; color: #fff; font-weight: 700; padding: 0 .35em; border-radius: 2px; }
+  .states {
+    display: flex; flex-wrap: wrap; gap: .5rem 1.4rem;
+    font-size: .82rem; color: var(--ink-soft);
+    margin: 0 0 .2rem;
+  }
+  .states .chip {
+    font-family: ui-monospace, Menlo, monospace;
+    background: #0e1512; color: #e6ede8;
+    border: 1px solid #26322b; border-radius: 5px;
+    padding: .12em .5em;
+  }
+
+  /* ---- symbol legend ---- */
+  .twocol { display: grid; grid-template-columns: 1fr 1fr; gap: .2rem 2.2rem; }
+  @media (max-width: 640px) { .twocol { grid-template-columns: 1fr; } }
+  .subhead {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: .72rem; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: .3rem 0 .1rem;
+  }
+  .srow {
+    display: grid; grid-template-columns: 1.9rem 1fr; gap: 0 .9rem;
+    align-items: baseline;
+    padding: .46rem 0;
+    border-top: 1px solid var(--line);
+  }
+  .srow.first { border-top: none; }
+  .srow .sym {
+    font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+    font-size: 1.1rem; font-weight: 700; color: var(--git);
+    text-align: center;
+  }
+  .srow .def { font-size: .9rem; color: var(--ink); }
+  .srow .def small { display: block; color: var(--ink-faint); font-size: .78rem; }
+
+  /* ---- code block ---- */
+  pre {
+    margin: 0;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 1rem 1.1rem;
+    overflow-x: auto;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: .84rem;
+    line-height: 1.7;
+    color: var(--ink);
+  }
+  pre .c { color: var(--ink-faint); }
+  pre .g { color: var(--accent-ink); }
+
+  .callout {
+    margin-top: 1rem;
+    padding: .85rem 1rem;
+    background: color-mix(in srgb, var(--star) 12%, var(--panel));
+    border: 1px solid color-mix(in srgb, var(--star) 35%, var(--line));
+    border-radius: 8px;
+    font-size: .86rem;
+    color: var(--ink-soft);
+  }
+  .callout b { color: var(--ink); }
+
+  footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+    color: var(--ink-faint);
+    font-size: .84rem;
+  }
+  footer code { font-family: ui-monospace, Menlo, monospace; color: var(--accent-ink); }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Ghostty · zsh · Starship · tmux</p>
+    <h1 class="mono">terminal setup<span class="cursor"></span></h1>
+    <p class="lede">The whole environment on one page — how to read the prompt and its
+      symbols, how the shell behaves, the aliases and helper commands, and the tmux
+      reference below. Everything is wired up by the numbered <span class="mono">*.sh</span>
+      files under <span class="mono">source/</span> and installed with <span class="mono">./install</span>.</p>
+    <div class="legend">
+      <span><span class="star">⭐</span> <b>= a custom convenience from the dotfiles</b></span>
+      <span>Reload after an edit with <kbd class="mono">src</kbd> <span class="star">⭐</span></span>
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <!-- reading the prompt -->
+    <section class="card span2">
+      <h2><span class="idx mono">❯</span> Reading the prompt <span class="tag">— Starship, three lines</span></h2>
+      <p class="sub">Configured in <span class="mono">config/starship.toml</span>, initialized by <span class="mono">source/50_prompt.sh</span>.</p>
+
+      <div class="term"><span class="t-time">Wed Jul 22 11:52</span>  <span class="t-host">jbeda@claudes-plan</span>            <span class="t-dur">3m12s</span>
+<span class="t-dir">~/src/dotfiles</span>  <span class="t-git">(master ✘!?)</span>
+<span class="t-ok">❯</span> </div>
+
+      <div class="row">
+        <div class="label"><span class="t-time mono">Wed Jul 22 11:52</span><small>when this prompt was drawn — scan scrollback to see roughly when things ran</small></div>
+        <div class="keys"><span class="mono" style="color:var(--ink-faint)">timestamp</span></div>
+      </div>
+      <div class="row">
+        <div class="label"><span class="mono" style="color:var(--git)">jbeda@claudes-plan</span><small>user@host — always shown, so you never mistake which box you're on</small></div>
+        <div class="keys"><span class="mono" style="color:var(--ink-faint)">who / where</span></div>
+      </div>
+      <div class="row">
+        <div class="label"><span class="mono" style="color:var(--star)">3m12s</span><small>how long the previous command took — only when it ran longer than 2s</small></div>
+        <div class="keys"><span class="mono" style="color:var(--ink-faint)">duration</span></div>
+      </div>
+      <div class="row">
+        <div class="label"><span class="mono" style="color:var(--accent)">~/src/dotfiles</span><small>current directory, home shortened to ~, truncated to the last 4 segments if deep</small></div>
+        <div class="keys"><span class="mono" style="color:var(--ink-faint)">directory</span></div>
+      </div>
+      <div class="row">
+        <div class="label"><span class="mono" style="color:var(--git)">(master ✘!?)</span><small>git branch + status — see the symbol legend next. Clean repo shows just (master)</small></div>
+        <div class="keys"><span class="mono" style="color:var(--ink-faint)">git</span></div>
+      </div>
+
+      <div class="states" style="margin-top:1rem">
+        <span><span class="chip"><span class="t-ok">❯</span></span> last command succeeded</span>
+        <span><span class="chip"><span class="t-err">❯</span></span> exited non-zero <span class="star">⭐</span></span>
+        <span><span class="chip"><span class="t-root">&nbsp;ROOT&nbsp;</span> <span class="t-host">root@host</span></span> when you're root <span class="star">⭐</span></span>
+      </div>
+    </section>
+
+    <!-- git status symbols -->
+    <section class="card span2">
+      <h2><span class="idx mono">±</span> Git status symbols <span class="tag">— the lingua franca</span></h2>
+      <p class="sub">Inside <span class="mono">(branch …)</span>. Starship's defaults, shared with many prompts — worth memorizing. Each shows only when present; several stack, e.g. <span class="mono" style="color:var(--git)">✘!?</span>.</p>
+
+      <div class="twocol">
+        <div>
+          <p class="subhead">Working tree</p>
+          <div class="srow first"><span class="sym">!</span><span class="def">modified<small>tracked file edited, not staged</small></span></div>
+          <div class="srow"><span class="sym">+</span><span class="def">staged<small>changes added with <span class="mono">git add</span></small></span></div>
+          <div class="srow"><span class="sym">?</span><span class="def">untracked<small>new file git isn't tracking yet</small></span></div>
+          <div class="srow"><span class="sym">✘</span><span class="def">deleted<small>a tracked file was removed</small></span></div>
+          <div class="srow"><span class="sym">»</span><span class="def">renamed<small>a tracked file was renamed</small></span></div>
+          <div class="srow"><span class="sym">$</span><span class="def">stashed<small>you have entries in <span class="mono">git stash</span></small></span></div>
+          <div class="srow"><span class="sym">=</span><span class="def">conflicted<small>merge/rebase conflict to resolve</small></span></div>
+        </div>
+        <div>
+          <p class="subhead">Vs. upstream</p>
+          <div class="srow first"><span class="sym">⇡N</span><span class="def">ahead<small>N local commits not yet pushed</small></span></div>
+          <div class="srow"><span class="sym">⇣N</span><span class="def">behind<small>N upstream commits not yet pulled</small></span></div>
+          <div class="srow"><span class="sym">⇕</span><span class="def">diverged<small>both ahead and behind — needs a rebase</small></span></div>
+
+          <div class="callout" style="margin-top:1.1rem">
+            <b>Nothing after the branch = clean tree.</b> So <span class="mono">(master ✘!?)</span> reads as: on <span class="mono">master</span>, with a deletion, an unstaged edit, and an untracked file. All symbols are remappable under <span class="mono">[git_status]</span>.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- shell behavior -->
+    <section class="card">
+      <h2><span class="idx mono">~</span> Shell behavior <span class="tag">(zsh)</span></h2>
+      <p class="sub">Defaults from <span class="mono">50_misc.sh</span> + <span class="mono">50_history.sh</span>.</p>
+
+      <div class="row"><div class="label">Type a dir name to cd into it <span class="star">⭐</span><small>AUTO_CD — no <span class="mono">cd</span> needed</small></div><div class="keys"><kbd class="mono">src/</kbd></div></div>
+      <div class="row"><div class="label">History shared across all shells, live <span class="star">⭐</span><small>run it in one pane, recall it in another</small></div><div class="keys"><kbd class="mono">50k lines</kbd></div></div>
+      <div class="row"><div class="label">Prefix history search <span class="star">⭐</span><small>type the start, then ↑ walks only matches</small></div><div class="keys"><kbd class="mono">git</kbd><kbd>↑</kbd></div></div>
+      <div class="row"><div class="label">Leading space keeps a command out of history</div><div class="keys"><kbd class="mono">␣cmd</kbd></div></div>
+      <div class="row"><div class="label">Case-insensitive globbing<small><span class="mono">*.MD</span> matches <span class="mono">*.md</span></small></div><div class="keys"><kbd class="mono">NOCASEGLOB</kbd></div></div>
+
+      <div class="callout">
+        <b>Editor:</b> <span class="mono">$EDITOR</span> is <span class="mono">code --wait</span> locally, or the first of <span class="mono">emacs / nano / pico</span> over SSH. From <span class="mono">50_editor.sh</span>.
+      </div>
+    </section>
+
+    <!-- line editing -->
+    <section class="card">
+      <h2><span class="idx mono">⌶</span> Line editing <span class="tag">(emacs keys)</span></h2>
+      <p class="sub">From <span class="mono">55_keybindings.sh</span> — <span class="mono">bindkey -e</span>.</p>
+
+      <div class="row"><div class="label">Prefix history search</div><div class="keys"><kbd>↑</kbd><span class="sep">/</span><kbd>↓</kbd></div></div>
+      <div class="row"><div class="label">Start / end of line</div><div class="keys"><kbd>Home</kbd><span class="sep">/</span><kbd>End</kbd><span class="sep">·</span><kbd>C-a</kbd><span class="sep">/</span><kbd>C-e</kbd></div></div>
+      <div class="row"><div class="label">Delete forward</div><div class="keys"><kbd>Delete</kbd></div></div>
+      <div class="row"><div class="label">Reverse-search history</div><div class="keys"><kbd>C-r</kbd></div></div>
+      <div class="row"><div class="label">Delete previous word <span class="star">⭐</span><small>stops at <span class="mono">/</span> — chip off path segments</small></div><div class="keys"><kbd>Esc</kbd><kbd>⌫</kbd></div></div>
+    </section>
+
+    <!-- shell aliases -->
+    <section class="card">
+      <h2><span class="idx mono">=</span> Aliases</h2>
+      <p class="sub">Some are platform-guarded.</p>
+
+      <div class="row"><div class="label">Colorized <span class="mono">ls</span> / <span class="mono">grep</span><small>solarized</small></div><div class="keys"><kbd class="mono">ls</kbd><span class="sep">·</span><kbd class="mono">grep</kbd></div></div>
+      <div class="row"><div class="label">List / detach tmux <span class="star">⭐</span></div><div class="keys"><kbd class="mono">tl</kbd><span class="sep">·</span><kbd class="mono">td</kbd></div></div>
+      <div class="row"><div class="label"><span class="mono">gcloud compute</span></div><div class="keys"><kbd class="mono">gce</kbd></div></div>
+      <div class="row"><div class="label">Open on the Mac <span class="star">⭐</span><small>Linux + bridge</small></div><div class="keys"><kbd class="mono">open</kbd><span class="sep">·</span><kbd class="mono">xdg-open</kbd></div></div>
+      <div class="row"><div class="label"><span class="mono">code --disable-gpu</span><small>Linux</small></div><div class="keys"><kbd class="mono">code</kbd></div></div>
+    </section>
+
+    <!-- git aliases -->
+    <section class="card span2">
+      <h2><span class="idx mono">git</span> Git aliases</h2>
+      <p class="sub">From <span class="mono">link/.gitconfig</span> — run as <span class="mono">git &lt;alias&gt;</span>.</p>
+
+      <div class="twocol">
+        <div>
+          <div class="srow first"><span class="sym" style="color:var(--accent)">st</span><span class="def">status</span></div>
+          <div class="srow"><span class="sym" style="color:var(--accent)">co</span><span class="def">checkout · <span class="mono">ci</span> commit · <span class="mono">br</span> branch</span></div>
+          <div class="srow"><span class="sym" style="color:var(--accent)">df</span><span class="def">diff · <span class="mono">lg</span> log with patches</span></div>
+          <div class="srow"><span class="sym" style="color:var(--accent)">g</span><span class="def">grep, skipping binaries</span></div>
+          <div class="srow"><span class="sym" style="color:var(--accent)">amend</span><span class="def">fold staged changes into last commit</span></div>
+        </div>
+        <div>
+          <div class="srow first"><span class="sym" style="color:var(--accent)">fa</span><span class="def">fetch --all --prune</span></div>
+          <div class="srow"><span class="sym" style="color:var(--accent)">furb</span><span class="def">fetch upstream + rebase on it <span class="star">⭐</span><small>the rebase-not-merge sync</small></span></div>
+          <div class="srow"><span class="sym" style="color:var(--accent)">pr N</span><span class="def">check out upstream PR #N <span class="star">⭐</span></span></div>
+          <div class="srow"><span class="sym" style="color:var(--accent)">pp</span><span class="def">pull then push</span></div>
+          <div class="srow"><span class="sym" style="color:var(--accent)">superclean</span><span class="def">clean -fdx, keeping editor/gcloud files</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- helpers -->
+    <section class="card span2">
+      <h2><span class="idx mono">ƒ</span> Helpers &amp; functions</h2>
+      <p class="sub">Shell functions and <span class="mono">~/.local/bin</span> tools.</p>
+
+      <div class="row"><div class="label">Re-source your zsh config <span class="star">⭐</span><small>whole config, or one <span class="mono">source/&lt;module&gt;.sh</span> — fastest way to apply an edit</small></div><div class="keys"><kbd class="mono">src</kbd><span class="sep">/</span><kbd class="mono">src 50_prompt</kbd></div></div>
+      <div class="row"><div class="label">Attach / create a tmux session <span class="star">⭐</span><small>default name <span class="mono">main</span></small></div><div class="keys"><kbd class="mono">ta</kbd><span class="sep">/</span><kbd class="mono">ta agent</kbd></div></div>
+      <div class="row"><div class="label">Two-pane Claude workspace <span class="star">⭐</span><small>new tmux window, Claude + shell → see tmux below</small></div><div class="keys"><kbd class="mono">cw</kbd></div></div>
+      <div class="row"><div class="label">SSH in + attach <span class="mono">main</span> on claudes-plan <span class="star">⭐</span><small>Mac</small></div><div class="keys"><kbd class="mono">cplan</kbd></div></div>
+      <div class="row"><div class="label">Open a URL/file on the Mac <span class="star">⭐</span><small>Linux; also <span class="mono">$BROWSER</span> for gh, webbrowser…</small></div><div class="keys"><kbd class="mono">browse</kbd></div></div>
+      <div class="row"><div class="label">Pull Mac clipboard image → local path <span class="star">⭐</span><small>Linux; also bound to <kbd class="accent">C-Spc</kbd> <kbd>i</kbd> in tmux</small></div><div class="keys"><kbd class="mono">paste-image</kbd></div></div>
+      <div class="row"><div class="label">Git worktree manager<small>external tool, shell hooks loaded if installed</small></div><div class="keys"><kbd class="mono">wt</kbd></div></div>
+    </section>
+
+    <!-- ============ TMUX ============ -->
+    <div class="band"><span class="t">tmux · prefix is C-Spc ⭐</span><span class="r"></span></div>
+
+    <!-- attach/detach -->
+    <section class="card span2">
+      <h2><span class="idx mono">◆</span> Attach &amp; detach — the whole point</h2>
+      <p class="sub">A session keeps running on the machine after you disconnect. Reconnect and pick up exactly where you left off.</p>
+
+      <div class="row">
+        <div class="label">Start / attach a session named <span class="mono">main</span></div>
+        <div class="keys"><kbd class="mono">ta</kbd><span class="star">⭐</span><span class="sep">or</span><kbd class="mono">tmux new -A -s main</kbd></div>
+      </div>
+      <div class="row">
+        <div class="label">Start a named session<small>e.g. one per agent</small></div>
+        <div class="keys"><kbd class="mono">tmux new -s agent</kbd></div>
+      </div>
+      <div class="row">
+        <div class="label">Detach — leave it running</div>
+        <div class="keys"><kbd class="accent">C-Spc</kbd><span class="sep">then</span><kbd>d</kbd></div>
+      </div>
+      <div class="row">
+        <div class="label">List sessions</div>
+        <div class="keys"><kbd class="mono">tl</kbd><span class="star">⭐</span><span class="sep">or</span><kbd class="mono">tmux ls</kbd></div>
+      </div>
+      <div class="row">
+        <div class="label">Attach to a session</div>
+        <div class="keys"><kbd class="mono">tmux attach -t agent</kbd></div>
+      </div>
+      <div class="row">
+        <div class="label">Kill a session</div>
+        <div class="keys"><kbd class="mono">tmux kill-session -t agent</kbd></div>
+      </div>
+
+      <div class="callout">
+        <b>Reconnecting over SSH:</b> just <span class="mono">ssh</span> in normally and run <kbd class="mono">ta</kbd>.
+        Doing it from an interactive login refreshes your SSH-agent link, so existing panes keep using your
+        forwarded keys. Avoid <span class="mono">ssh host -t tmux attach</span> — it's non-interactive and skips that refresh.
+      </div>
+    </section>
+
+    <!-- cw: two-pane Claude workspace -->
+    <section class="card span2">
+      <h2><span class="idx mono">◨</span> <span class="mono">cw</span> — two-pane Claude workspace <span class="star">⭐</span></h2>
+      <p class="sub">A shell helper that opens a <b>new window</b> (current pane untouched) split into two side-by-side panes rooted in a directory: left runs Claude Code via <span class="mono">cswap run</span>, right is a plain shell. Focus lands on the Claude pane.</p>
+
+      <div class="row">
+        <div class="label">New window here<small>Claude via the dir's cswap-mapped account</small></div>
+        <div class="keys"><kbd class="mono">cw</kbd></div>
+      </div>
+      <div class="row">
+        <div class="label">…forcing a cswap account<small>overrides the mapping</small></div>
+        <div class="keys"><kbd class="mono">cw 2</kbd></div>
+      </div>
+      <div class="row">
+        <div class="label">…account 2, rooted in a directory</div>
+        <div class="keys"><kbd class="mono">cw 2 ~/src/foo</kbd></div>
+      </div>
+      <div class="row">
+        <div class="label">Mapped account, rooted in a directory<small>first arg is the dir when it looks like a path</small></div>
+        <div class="keys"><kbd class="mono">cw ~/src/foo</kbd></div>
+      </div>
+
+      <div class="callout">
+        Omitting the profile uses the directory's <span class="mono">cswap map</span> account — so map your projects once
+        (<span class="mono">cswap map 2 ~/src/foo</span>) and a bare <kbd class="mono">cw</kbd> there just works; pass a number to override.
+        Must be run from inside tmux. Defined in <span class="mono">source/50_tmux.sh</span>.
+      </div>
+    </section>
+
+    <!-- windows -->
+    <section class="card">
+      <h2><span class="idx mono">▸</span> Windows <span class="tag">(like tabs)</span></h2>
+      <p class="sub">Full-screen workspaces inside one session.</p>
+
+      <div class="row"><div class="label">New window</div><div class="keys"><kbd class="accent">C-Spc</kbd><kbd>c</kbd></div></div>
+      <div class="row"><div class="label">Next / previous</div><div class="keys"><kbd class="accent">C-Spc</kbd><kbd>n</kbd><span class="sep">/</span><kbd class="accent">C-Spc</kbd><kbd>p</kbd></div></div>
+      <div class="row"><div class="label">Jump to window N<small>windows start at 1 ⭐</small></div><div class="keys"><kbd class="accent">C-Spc</kbd><kbd>1</kbd><span class="sep">…</span><kbd>9</kbd></div></div>
+      <div class="row"><div class="label">Rename window</div><div class="keys"><kbd class="accent">C-Spc</kbd><kbd>,</kbd></div></div>
+      <div class="row"><div class="label">Visual window picker</div><div class="keys"><kbd class="accent">C-Spc</kbd><kbd>w</kbd></div></div>
+      <div class="row"><div class="label">Close window</div><div class="keys"><kbd class="accent">C-Spc</kbd><kbd>&amp;</kbd></div></div>
+    </section>
+
+    <!-- panes -->
+    <section class="card">
+      <h2><span class="idx mono">▤</span> Panes <span class="tag">(splits)</span></h2>
+      <p class="sub">Tile one window into several shells.</p>
+
+      <div class="row"><div class="label">Split left / right</div><div class="keys"><kbd class="accent">C-Spc</kbd><kbd>%</kbd><span class="sep">or</span><kbd class="accent">C-Spc</kbd><kbd>|</kbd><span class="star">⭐</span></div></div>
+      <div class="row"><div class="label">Split top / bottom</div><div class="keys"><kbd class="accent">C-Spc</kbd><kbd>"</kbd><span class="sep">or</span><kbd class="accent">C-Spc</kbd><kbd>-</kbd><span class="star">⭐</span></div></div>
+      <div class="row"><div class="label">Move between panes</div><div class="keys"><kbd class="accent">C-Spc</kbd><kbd>↑↓←→</kbd></div></div>
+      <div class="row"><div class="label">Zoom pane (fullscreen toggle)</div><div class="keys"><kbd class="accent">C-Spc</kbd><kbd>z</kbd></div></div>
+      <div class="row"><div class="label">Resize<small>hold and repeat the arrow</small></div><div class="keys"><kbd class="accent">C-Spc</kbd><kbd>C-↑↓←→</kbd></div></div>
+      <div class="row"><div class="label">Pane → its own window</div><div class="keys"><kbd class="accent">C-Spc</kbd><kbd>!</kbd></div></div>
+      <div class="row"><div class="label">Close pane</div><div class="keys"><kbd class="accent">C-Spc</kbd><kbd>x</kbd><span class="sep">or</span><kbd class="mono">exit</kbd></div></div>
+    </section>
+
+    <!-- copy mode -->
+    <section class="card">
+      <h2><span class="idx mono">⧉</span> Copy &amp; scroll</h2>
+      <p class="sub">emacs-style keys. Copied text reaches your Mac clipboard via OSC&nbsp;52.</p>
+
+      <div class="row"><div class="label">Enter copy / scroll mode</div><div class="keys"><kbd class="accent">C-Spc</kbd><kbd>[</kbd></div></div>
+      <div class="row"><div class="label">Scroll<small>or just the mouse wheel</small></div><div class="keys"><kbd>PgUp</kbd><span class="sep">/</span><kbd>PgDn</kbd></div></div>
+      <div class="row"><div class="label">Select then copy<small>Space, not C-Spc — the prefix wins in copy mode</small></div><div class="keys"><kbd>Space</kbd><span class="star">⭐</span><span class="sep">…</span><kbd>M-w</kbd></div></div>
+      <div class="row"><div class="label">Search backward</div><div class="keys"><kbd>C-r</kbd></div></div>
+      <div class="row"><div class="label">Quit copy mode</div><div class="keys"><kbd>q</kbd></div></div>
+
+      <div class="callout">
+        <b>Mouse-mode gotcha:</b> with mouse on, dragging selects into tmux's buffer, not the OS clipboard.
+        For a native Ghostty selection to ⌘C, <b>hold Shift while dragging</b>.
+      </div>
+    </section>
+
+    <!-- session & misc -->
+    <section class="card">
+      <h2><span class="idx mono">✱</span> Session &amp; misc</h2>
+      <p class="sub">Odds and ends worth memorizing.</p>
+
+      <div class="row"><div class="label">Reload config <span class="star">⭐</span></div><div class="keys"><kbd class="accent">C-Spc</kbd><kbd>r</kbd></div></div>
+      <div class="row"><div class="label">Command prompt<small>type any tmux command</small></div><div class="keys"><kbd class="accent">C-Spc</kbd><kbd>:</kbd></div></div>
+      <div class="row"><div class="label">Rename session</div><div class="keys"><kbd class="accent">C-Spc</kbd><kbd>$</kbd></div></div>
+      <div class="row"><div class="label">Visual session picker</div><div class="keys"><kbd class="accent">C-Spc</kbd><kbd>s</kbd></div></div>
+      <div class="row"><div class="label">List every binding</div><div class="keys"><kbd class="accent">C-Spc</kbd><kbd>?</kbd></div></div>
+      <div class="row"><div class="label">Paste Mac clipboard image → path <span class="star">⭐</span></div><div class="keys"><kbd class="accent">C-Spc</kbd><kbd>i</kbd></div></div>
+    </section>
+
+    <!-- persistence -->
+    <section class="card span2">
+      <h2><span class="idx mono">↺</span> Persist across reboots <span class="star">⭐</span></h2>
+      <p class="sub">Detach/reattach needs no help. These add recovery after a reboot or tmux-server restart (resurrect + continuum).</p>
+
+      <div class="row">
+        <div class="label">Save layout now</div>
+        <div class="keys"><kbd class="accent">C-Spc</kbd><kbd>C-s</kbd></div>
+      </div>
+      <div class="row">
+        <div class="label">Restore last saved layout</div>
+        <div class="keys"><kbd class="accent">C-Spc</kbd><kbd>C-r</kbd></div>
+      </div>
+      <div class="row">
+        <div class="label">Autosave + restore on startup<small>continuum, every 15 min — automatic</small></div>
+        <div class="keys"><kbd class="mono">on by default</kbd></div>
+      </div>
+
+      <div class="callout">
+        A reboot kills running processes (agents too). These restore the <b>layout, panes, and cwd</b> so you can
+        relaunch fast — they don't preserve a live process's in-memory state.
+      </div>
+    </section>
+
+    <!-- shell commands -->
+    <section class="card span2">
+      <h2><span class="idx mono">$</span> tmux from the plain shell</h2>
+      <p class="sub">No prefix needed — these run before you're inside tmux.</p>
+<pre><span class="c"># sessions</span>
+tmux ls                      <span class="c"># list sessions</span>
+tmux new -s <span class="g">NAME</span>             <span class="c"># create a session</span>
+tmux attach -t <span class="g">NAME</span>          <span class="c"># attach to one</span>
+tmux kill-session -t <span class="g">NAME</span>    <span class="c"># kill one session</span>
+tmux kill-server             <span class="c"># kill everything</span>
+
+tmux source-file ~/.tmux.conf   <span class="c"># reload config from outside tmux</span></pre>
+    </section>
+
+  </div>
+
+  <footer>
+    Live help: <code>git status</code> for the full picture · <code>C-Spc ?</code> lists every tmux binding ·
+    <code>man zshoptions</code> and the <a href="https://starship.rs/config/" style="color:var(--accent-ink)">Starship docs</a> are the references ·
+    repo copies at <code>docs/terminal-cheatsheet.md</code> &amp; <code>docs/tmux-cheatsheet.md</code>
+  </footer>
+</div>

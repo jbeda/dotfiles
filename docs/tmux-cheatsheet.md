@@ -1,5 +1,8 @@
 # tmux cheat sheet
 
+> Companion to the [terminal setup cheat sheet](terminal-cheatsheet.md) (prompt,
+> shell, aliases, helpers). This sheet is tmux-specific.
+
 Prefix is **`Ctrl-Space`** ⭐ (press and release, then the next key). Written
 below as `C-Spc`. Your `~/.tmux.conf` in this repo adds a few conveniences
 noted with ⭐. Online cheat sheets assume the default `Ctrl-b` — mentally swap.
