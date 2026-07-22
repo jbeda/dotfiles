@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Installation
 
-Run `./install` from the repo root. It symlinks files from `link/` and platform-specific directories (`darwin/link/` or `linux/link/`) into `$HOME`, backing up any pre-existing files to `~/.dotfiles-backups/{timestamp}/`.
+Run `./install` from the repo root. It symlinks files from `link/` and platform-specific directories (`darwin/link/` or `linux/link/`) into `$HOME`, backing up any pre-existing files to `~/.dotfiles-backups/{timestamp}/`. It also bootstraps two binaries if missing — `starship` (prompt) and `mise` (runtime versions) — via brew on macOS or their official installers into `~/.local/bin` on Linux, then runs `mise install` to realize the runtimes pinned in `config/mise/config.toml`.
 
 There are no tests. Validate changes by sourcing the relevant script or opening a new shell session.
 
@@ -27,13 +27,13 @@ Platform subdirectories install only on that platform.
 
 - `10-15` — terminal/locale/Homebrew init (must run first, no deps)
 - `40-42` — PATH construction and terminal integrations (iTerm2, Ghostty)
-- `45-55` — environment setup: editors, Go, Node (NVM lazy-loaded), AWS, GCloud, SSH agent, history, prompt
+- `45-55` — environment setup: editors, Go, Node (via mise), AWS, GCloud, SSH agent, history, prompt
 - `55` — keybindings
 - `60` — zsh completion init (runs after PATH is set)
 - `90` — PATH deduplication (runs last in setup)
 - `99` — session messages (tmux indicators)
 
-Add a new shell feature by creating a numbered `.sh` file in `source/`. Use lazy loading for slow-initializing tools (see `50_nvm.sh` for the pattern).
+Add a new shell feature by creating a numbered `.sh` file in `source/`. Runtime versions (Node today; Go/Python could move here too) are managed by mise: `source/50_mise.sh` activates it, `config/mise/config.toml` pins the tools, and `./install` bootstraps the binary. Edit the pins in the repo file rather than running `mise use -g`, which can break the config symlink.
 
 ### Third-Party Submodules (`third_party/`)
 

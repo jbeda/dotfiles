@@ -129,6 +129,7 @@ From `link/.gitconfig` — use as `git <alias>`:
 | `cplan` ⭐ | (Mac) SSH into `claudes-plan` and attach its `main` session | `darwin/source/50_cplan.sh` |
 | `browse <url\|file>` ⭐ | (Linux) open a URL/file on the Mac over the bridge; also `$BROWSER` for `gh`, `python -m webbrowser`, etc. | `linux/bin/browse` |
 | `paste-image` ⭐ | (Linux) pull the Mac clipboard image over the bridge, print its local path. Also bound to `C-Spc i` in tmux | `linux/bin/paste-image` |
+| `mise …` | Runtime versions (Node today). Pins live in `config/mise/config.toml` — edit there, not `mise use -g`. `./install` bootstraps the binary + runtimes | `50_mise.sh` |
 | `wt …` | Worktrunk — git worktree manager (external tool, shell hooks loaded if installed) | `50_wt.sh` |
 | `titlebar <text>` | Set the terminal title bar | `50_misc.sh` |
 

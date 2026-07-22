@@ -1,0 +1,8 @@
+# Global mise tool pins, linked to ~/.config/mise/config.toml by ./install,
+# which also runs `mise install` to realize them. Edit this file in the repo
+# rather than running `mise use -g` -- mise rewrites the global config on
+# `use -g`, which can replace the symlink with a plain file and orphan it
+# from the repo.
+
+[tools]
+node = "lts"

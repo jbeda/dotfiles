@@ -146,11 +146,38 @@ function install_starship() {
   fi
 }
 
+# Bootstrap mise (runtime version manager -- node, etc.) if missing, then
+# install the tools pinned in config/mise/config.toml. Must run after
+# link_config so the global config is in place. Idempotent and non-fatal.
+function install_mise() {
+  local mise_bin
+  if ! mise_bin="$(command -v mise)" && [[ ! -x "$HOME/.local/bin/mise" ]]; then
+    e_header "Installing mise"
+    if [[ "$platform" == "darwin" ]] && command -v brew >/dev/null 2>&1; then
+      brew install mise
+    elif command -v curl >/dev/null 2>&1; then
+      curl -sS https://mise.run | sh
+    else
+      e_error "Can't install mise automatically: need brew (darwin) or curl. Install it manually."
+      return
+    fi
+  else
+    e_success "mise already installed."
+  fi
+  # command -v may miss ~/.local/bin in a bare bash env; fall back explicitly.
+  mise_bin="$(command -v mise || echo "$HOME/.local/bin/mise")"
+  if [[ -x "$mise_bin" ]]; then
+    e_header "Installing mise-pinned runtimes"
+    "$mise_bin" install
+  fi
+}
+
 do_stuff "link" "$dotfile_base/link"
 [ -d "$dotfile_base/$platform/link" ] && do_stuff "link" "$dotfile_base/$platform/link"
 link_bin
 link_config
 install_starship
+install_mise
 
 # Alert if backups were made.
 if [[ "$backup" ]]; then
