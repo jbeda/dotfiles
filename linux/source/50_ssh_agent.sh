@@ -24,9 +24,14 @@ mkdir -p "$(dirname "$ssh_agent_link")"
 # Prefer an agent handed to this session (e.g. forwarded via `ssh -A`). It's
 # inherited when SSH_AUTH_SOCK points somewhere other than our stable symlink
 # and answers. ssh-add -l exits 2 when no agent is reachable; 0/1 mean it is.
+#
+# All ssh-add probes are wrapped in `timeout 2`: a forwarded socket whose SSH
+# connection died (client slept/roamed) accepts connects but never answers, so
+# a bare ssh-add -l blocks forever -- which used to hang every new shell after
+# a roam. timeout exits 124 then; treat that like 2 (agent unusable).
 if [[ -n "$SSH_AUTH_SOCK" && "$SSH_AUTH_SOCK" != "$ssh_agent_link" ]]; then
-    ssh-add -l &> /dev/null
-    if [[ $? -ne 2 ]]; then
+    timeout 2 ssh-add -l &> /dev/null
+    if [[ $? -lt 2 ]]; then
         ln -sfn "$SSH_AUTH_SOCK" "$ssh_agent_link"
         export SSH_AUTH_SOCK="$ssh_agent_link"
         return
@@ -36,21 +41,27 @@ fi
 # No forwarded agent: fall back to the shared local agent via the stable path.
 export SSH_AUTH_SOCK="$ssh_agent_link"
 
-# ssh-add follows the symlink to whatever it currently targets; exit 2 means
-# that target is dead or missing, so we (re)start the local agent. flock
-# serializes the check-and-start so concurrent login shells don't each launch
-# an agent or race on the relink.
-ssh-add -l &> /dev/null
-if [[ $? -eq 2 ]]; then
+# ssh-add follows the symlink to whatever it currently targets; exit 2 (or a
+# 124 timeout on a hung socket) means that target is dead or missing, so we
+# (re)start the local agent. flock serializes the check-and-start so concurrent
+# login shells don't each launch an agent or race on the relink.
+timeout 2 ssh-add -l &> /dev/null
+if [[ $? -ge 2 ]]; then
     if flock "${ssh_agent_link}.lock" sh -c '
-        SSH_AUTH_SOCK="$2" ssh-add -l > /dev/null 2>&1
-        [ $? -eq 2 ] || exit 1   # another shell won the race; nothing to do
-        rm -f "$1"               # stale local socket if no agent answered
+        SSH_AUTH_SOCK="$2" timeout 2 ssh-add -l > /dev/null 2>&1
+        rc=$?
+        [ "$rc" -ge 2 ] || exit 1   # another shell won the race; nothing to do
+        rm -f "$1"                  # stale local socket if no agent answered
         ssh-agent -a "$1" > /dev/null
-        ln -sfn "$1" "$2"        # point the stable path at the fresh agent
+        ln -sfn "$1" "$2"           # point the stable path at the fresh agent
     ' _ "$ssh_agent_local" "$ssh_agent_link"; then
         # Only the shell that started the agent loads the key, so a burst of
-        # login shells produces at most one passphrase prompt.
-        ssh-add
+        # login shells produces at most one passphrase prompt. Skip it when
+        # there's no human on a tty (scripted `zsh -ic`, automation) -- a
+        # passphrase prompt there would block the shell forever. if/fi (not
+        # `&&`) so a skipped prompt doesn't leak $?=1 as this file's status.
+        if [[ -t 0 ]]; then
+            ssh-add
+        fi
     fi
 fi
