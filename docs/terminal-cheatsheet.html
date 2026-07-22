@@ -207,6 +207,8 @@
   }
   .t-time { color: #7c8a80; }
   .t-host { color: #c58fd8; }
+  .t-at   { color: #7c8a80; }
+  .t-hostn{ color: #d75fd7; font-weight: 600; }  /* claudes-plan's hash color (170) */
   .t-dur  { color: #e0a353; }
   .t-dir  { color: #6ea8e0; font-weight: 600; }
   .t-git  { color: #d08fc0; }
@@ -307,7 +309,7 @@
       <h2><span class="idx mono">❯</span> Reading the prompt <span class="tag">— Starship, three lines</span></h2>
       <p class="sub">Configured in <span class="mono">config/starship.toml</span>, initialized by <span class="mono">source/50_prompt.sh</span>.</p>
 
-      <div class="term"><span class="t-time">Wed Jul 22 11:52</span>  <span class="t-host">jbeda@claudes-plan</span>            <span class="t-dur">3m12s</span>
+      <div class="term"><span class="t-time">Wed Jul 22 11:52</span>  <span class="t-host">jbeda</span><span class="t-at">@</span><span class="t-hostn">claudes-plan</span>            <span class="t-dur">3m12s</span>
 <span class="t-dir">~/src/dotfiles</span>  <span class="t-git">(master ✘!?)</span>
 <span class="t-ok">❯</span> </div>
 
@@ -316,7 +318,7 @@
         <div class="keys"><span class="mono" style="color:var(--ink-faint)">timestamp</span></div>
       </div>
       <div class="row">
-        <div class="label"><span class="mono" style="color:var(--git)">jbeda@claudes-plan</span><small>user@host — always shown, so you never mistake which box you're on</small></div>
+        <div class="label"><span class="mono" style="color:var(--git)">jbeda</span><span class="mono" style="color:var(--ink-faint)">@</span><span class="mono" style="color:#d75fd7">claudes-plan</span><small>user@host — always shown. The hostname's color is a stable hash of its name <span class="star">⭐</span> — each machine gets its own color</small></div>
         <div class="keys"><span class="mono" style="color:var(--ink-faint)">who / where</span></div>
       </div>
       <div class="row">

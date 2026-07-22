@@ -6,7 +6,7 @@
 #   line 3:  ❯   (green on success, red on non-zero exit)
 
 format = """
-${env_var.STARSHIP_ROOT_BADGE}$time$username$hostname$cmd_duration
+${env_var.STARSHIP_ROOT_BADGE}$time$username${env_var.STARSHIP_HOST}$cmd_duration
 $directory$git_branch$git_status
 $character"""
 
@@ -33,10 +33,14 @@ format = '[$user]($style)'
 style_user = 'purple'
 style_root = 'red bold'
 
-[hostname]
-ssh_only = false
-format = '[@$hostname]($style)  '
-style = 'purple'
+# Hostname with a deterministic per-host color. STARSHIP_HOST is precomputed in
+# source/50_prompt.sh with the color's ANSI already baked in (hostname hashed
+# into a palette), so we print it raw; the '@' stays dim. Starship's own
+# [hostname] module can't do a dynamic color -- its `style` is static -- so this
+# replaces it.
+[env_var.STARSHIP_HOST]
+format = '[@]($style)$env_value  '
+style = 'bright-black'
 
 # Duration of the previous command; only shown when it ran longer than min_time.
 [cmd_duration]

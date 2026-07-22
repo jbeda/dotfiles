@@ -24,7 +24,7 @@ Wed Jul 22 11:52  jbeda@claudes-plan            3m12s
 | Part | What it tells you |
 | --- | --- |
 | `Wed Jul 22 11:52` | Timestamp of **when this prompt was drawn** — scan scrollback to see roughly when things ran |
-| `jbeda@claudes-plan` | `user@host` — always shown, so you never mistake which box you're on |
+| `jbeda@claudes-plan` | `user@host` — always shown. The hostname's color is a **stable hash of its name** ⭐, so each machine you land on gets its own color — a glance tells you where you are |
 | `3m12s` | How long the **previous command** took. Only appears when it ran longer than **2s** |
 | `~/src/dotfiles` | Current directory (full path, home shortened to `~`, truncated to the last 4 segments if deep) |
 | `(master ✘!?)` | Git branch + status — see the symbol legend below. A clean repo shows just `(master)` |
