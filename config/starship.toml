@@ -1,0 +1,72 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
+# Three-line prompt:
+#   line 1:  Day Mon DD HH:MM   user@host   [cmd duration]
+#   line 2:  ~/truncated/dir  (branch <git status>)
+#   line 3:  ❯   (green on success, red on non-zero exit)
+
+format = """
+${env_var.STARSHIP_ROOT_BADGE}$time$username$hostname$cmd_duration
+$directory$git_branch$git_status
+$character"""
+
+add_newline = false
+
+# --- line 1 -----------------------------------------------------------------
+
+# Loud red badge when the shell is root (STARSHIP_ROOT_BADGE is set by
+# source/50_prompt.sh; unset for a normal user, so this renders nothing).
+# Named colors so it stays loud on a 16-color terminal.
+[env_var.STARSHIP_ROOT_BADGE]
+format = '[$env_value]($style)  '
+style = 'bold white bg:red'
+
+[time]
+disabled = false
+format = '[$time]($style)  '
+time_format = '%a %b %d %H:%M'
+style = 'bright-black'
+
+[username]
+show_always = true
+format = '[$user]($style)'
+style_user = 'purple'
+style_root = 'red bold'
+
+[hostname]
+ssh_only = false
+format = '[@$hostname]($style)  '
+style = 'purple'
+
+# Duration of the previous command; only shown when it ran longer than min_time.
+[cmd_duration]
+min_time = 2000
+format = '[$duration]($style)'
+style = 'yellow'
+
+# --- line 2 -----------------------------------------------------------------
+
+[directory]
+truncation_length = 4
+truncate_to_repo = false
+format = '[$path]($style)[$read_only]($read_only_style)  '
+style = 'blue bold'
+read_only = ' '
+read_only_style = 'red'
+
+# Wrapped as "(branch <status>)". The opening paren lives on git_branch, the
+# closing paren on git_status, so a clean repo renders "(branch)".
+[git_branch]
+symbol = ''
+format = '[\($branch]($style)'
+style = 'magenta'
+
+[git_status]
+format = '([ $all_status$ahead_behind]($style))[\)]($style) '
+style = 'magenta'
+
+# --- line 3 -----------------------------------------------------------------
+
+[character]
+success_symbol = '[❯](green)'
+error_symbol = '[❯](red)'

@@ -130,10 +130,27 @@ shopt -s nullglob
 
 platform=$(echo $(uname -s) | tr '[:upper:]' '[:lower:]')
 
+# Bootstrap the Starship prompt if it's missing. The install is otherwise
+# symlink-only, but source/50_prompt.sh needs the starship binary present
+# (falls back to a bare prompt without it). Idempotent and non-fatal.
+function install_starship() {
+  command -v starship >/dev/null 2>&1 && { e_success "starship already installed."; return; }
+  e_header "Installing starship prompt"
+  if [[ "$platform" == "darwin" ]] && command -v brew >/dev/null 2>&1; then
+    brew install starship
+  elif command -v curl >/dev/null 2>&1; then
+    mkdir -p "$HOME/.local/bin"
+    curl -sS https://starship.rs/install.sh | sh -s -- --yes --bin-dir "$HOME/.local/bin"
+  else
+    e_error "Can't install starship automatically: need brew (darwin) or curl. Install it manually."
+  fi
+}
+
 do_stuff "link" "$dotfile_base/link"
 [ -d "$dotfile_base/$platform/link" ] && do_stuff "link" "$dotfile_base/$platform/link"
 link_bin
 link_config
+install_starship
 
 # Alert if backups were made.
 if [[ "$backup" ]]; then

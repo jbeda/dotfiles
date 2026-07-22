@@ -38,7 +38,6 @@ Add a new shell feature by creating a numbered `.sh` file in `source/`. Use lazy
 ### Third-Party Submodules (`third_party/`)
 
 - `dircolors-solarized` — solarized colors for `ls`/`grep` output
-- `third_party/git/` — git-prompt script used by `50_prompt.sh`
 
 Initialize submodules with `git submodule update --init` after cloning.
 
