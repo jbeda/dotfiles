@@ -63,8 +63,8 @@ always-on autossh job dials (see [Persistence](#persistence-across-sleep--roamin
 # Interactive + VS Code. Keepalives so a dead link is detected and torn down
 # fast (no orphaned VS Code server / stale ControlMaster). NO RemoteForward here
 # — the tunnel block below owns port 17603; two owners collide on it.
-Host claudes-plan claudes-plan.h.bedafamily.com
-    Hostname claudes-plan.h.bedafamily.com
+Host claudes-plan
+    HostName claudes-plan.<your-tailnet>.ts.net
     ForwardAgent yes
     ControlMaster auto
     ControlPath ~/.ssh/cm-%C
@@ -77,7 +77,7 @@ Host claudes-plan claudes-plan.h.bedafamily.com
 # after sleep / a network change. It owns the RemoteForward, dies loudly if it
 # can't bind the port (so autossh notices and restarts), and never multiplexes.
 Host claudes-plan-tunnel
-    HostName claudes-plan.h.bedafamily.com
+    HostName claudes-plan.<your-tailnet>.ts.net
     ForwardAgent no
     ControlMaster no
     ControlPath none
@@ -87,10 +87,16 @@ Host claudes-plan-tunnel
     ServerAliveCountMax 3
 ```
 
-> **Roaming gotcha:** `HostName` must resolve on *every* network you use. If
-> `…h.bedafamily.com` is home-only DNS, the tunnel won't reconnect at work — use
-> your **Tailscale MagicDNS name** (e.g. `claudes-plan`) as the `HostName` in both
-> blocks so it routes the same everywhere.
+> **Why the Tailscale MagicDNS FQDN for `HostName`:** it resolves and routes on
+> *every* network you roam to, and Tailscale gives a **direct** peer-to-peer path
+> in each — the LAN path when you're home, NAT-traversal when you're not (not a
+> DERP relay) — so there's no performance reason to prefer a raw-LAN name. A
+> home-only DNS name would just fail to reconnect at work. The one dependency:
+> `tailscaled` must be up on both ends. `Host` stays the short alias you type
+> (`ssh claudes-plan`); only `HostName` is the FQDN. The short MagicDNS name
+> (`claudes-plan`) also works if your tailnet's search domain is applied, but the
+> full FQDN is failsafe. Keep the tunnel block named exactly `claudes-plan-tunnel`
+> — the launchd plist dials that literal alias.
 
 `ControlMaster`/`ControlPath`/`ControlPersist` multiplex interactive + VS Code ssh
 onto one shared connection, which makes `code --remote` (and any `ssh -O forward
