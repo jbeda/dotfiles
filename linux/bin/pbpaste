@@ -19,6 +19,12 @@ if ! { exec 3<>"/dev/tcp/127.0.0.1/${port}"; } 2>/dev/null; then
   exit 1
 fi
 
-printf 'clip-get\n' >&3
+# Shared secret gating the bridge (darwin/mac-bridge/dispatch). No token => empty
+# field => the Mac rejects it (fail closed); run darwin/mac-bridge/set-token once.
+tok=""
+tokfile="${MAC_BRIDGE_TOKEN_FILE:-$HOME/.config/mac-bridge/token}"
+if [[ -r "$tokfile" ]]; then IFS= read -r tok < "$tokfile" || true; fi
+
+printf '%s\tclip-get\n' "$tok" >&3
 cat <&3            # read the Mac's pbpaste output until it closes the socket
 exec 3>&-

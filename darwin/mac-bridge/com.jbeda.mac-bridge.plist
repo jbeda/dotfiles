@@ -32,7 +32,7 @@
   </dict>
 
   <!-- Hand each accepted connection to the on-disk dispatch script, which reads
-       one tab-separated request line ("verb TAB args") off the socket (stdin)
+       one tab-separated request line ("token TAB verb TAB args") off the socket (stdin)
        and validates + runs it. The logic lives in ./dispatch (three verbs:
        open / code / clip-image) rather than inline here so it stays readable and
        lintable. We exec it via $HOME (expanded by sh) so the plist needn't

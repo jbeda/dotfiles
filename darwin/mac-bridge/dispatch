@@ -3,15 +3,26 @@
 #
 # launchd (com.jbeda.mac-bridge.plist, inetd-style) accepts each connection on
 # 127.0.0.1:17603 and runs this once, with the socket wired to stdin/stdout. We
-# read ONE tab-separated request line ("verb<TAB>a1<TAB>a2") and dispatch it.
-# Requests arrive over an SSH RemoteForward from the Linux box; see the
-# README.md next to this file for the full picture and the box-side senders
-# (linux/bin/{browse,code-mac,paste-image}).
+# read ONE tab-separated request line ("token<TAB>verb<TAB>a1<TAB>a2") and
+# dispatch it. Requests arrive over an SSH RemoteForward from the Linux box; see
+# the README.md next to this file for the full picture and the box-side senders
+# (linux/bin/{browse,code-mac,paste-image,pbpaste}).
 #
-# Security: every verb validates its args before running anything, so a stray
-# local process connecting to the port can't run arbitrary commands. The whole
-# surface is "open a web URL", "open VS Code on an ssh host", and "scp the
-# clipboard image to an ssh host".
+# SECURITY MODEL -- read before "hardening" anything:
+#  * A shared-secret TOKEN (first field) authenticates the caller. The box-side
+#    loopback that this tunnel lands on is shared with every local user (this box
+#    is multi-user) and every agent, so the port alone is NOT a trust boundary.
+#    The token file is mode 600, so a *different* local user (or the tailnet, if
+#    the forward ever binds non-loopback) can't read it and can't forge a
+#    request. This is the boundary that stops `nora` reading your clipboard.
+#  * It does NOT stop code running as the SAME uid that owns the token (e.g. a
+#    prompt-injected agent running as jbeda) -- that reads the token file too.
+#    Containing that needs uid/container isolation of the agents; out of scope
+#    here and documented as a known residual in README.md.
+#  * Beyond auth, every verb validates its args so even an authenticated caller
+#    can't turn a verb into arbitrary command execution. Surface: open a web URL,
+#    open VS Code on an ssh host, scp the clipboard image to an ssh host, read
+#    the text clipboard.
 
 # code / pngpaste / etc. aren't on launchd's bare PATH; add the usual spots.
 PATH="/usr/local/bin:/opt/homebrew/bin:$HOME/.local/bin:$PATH"
@@ -26,15 +37,34 @@ is_alias() {
   esac
 }
 
-is_abspath() {
+# A safe absolute path: leading slash, then ONLY [A-Za-z0-9._/-], and no "..".
+# Stricter than "starts with /" because a2 is spliced into an scp *remote* path,
+# which legacy (non-SFTP) scp expands through a shell on the far side -- so a
+# metacharacter here (`;`, `$( )`, backtick, space) could mean command execution
+# on the box. The charset also blocks scp option injection; "--" guards the rest.
+is_safe_abspath() {
   case "$1" in
-    /*) return 0 ;;
+    /*) : ;;
     *) return 1 ;;
+  esac
+  case "$1" in
+    *[!A-Za-z0-9._/-]* | *..*) return 1 ;;
+    *) return 0 ;;
   esac
 }
 
+# --- Authentication: verify the shared token BEFORE doing anything ----------
+# Fail closed: if the token file is missing or empty, refuse every request, so a
+# half-finished install (dispatch deployed, token not yet synced) can't run
+# unauthenticated. setup-mac generates the token and syncs it to the box.
+TOKFILE="${MAC_BRIDGE_TOKEN_FILE:-$HOME/.config/mac-bridge/token}"
+
 tab=$(printf '\t')
-IFS=$tab read -r verb a1 a2 || exit 0
+IFS=$tab read -r tok verb a1 a2 || exit 0
+
+[ -r "$TOKFILE" ] || exit 0
+IFS= read -r want < "$TOKFILE" || exit 0
+[ -n "$want" ] && [ "$tok" = "$want" ] || exit 0
 
 case "$verb" in
   # a1 = URL. Only http/https -- no file:// or app-scheme URLs.
@@ -47,7 +77,7 @@ case "$verb" in
   # a1 = ssh Host alias, a2 = absolute dir/file on that host. Open VS Code on
   # the Mac attached to it; VS Code makes its own ssh back to the host.
   code)
-    is_alias "$a1" && is_abspath "$a2" || exit 0
+    is_alias "$a1" && is_safe_abspath "$a2" || exit 0
     exec code --remote "ssh-remote+$a1" "$a2"
     ;;
 
@@ -56,10 +86,10 @@ case "$verb" in
   # box, like `code`). No image on the clipboard -> pngpaste fails -> send
   # nothing, and the box-side poller times out with a "no image" message.
   clip-image)
-    is_alias "$a1" && is_abspath "$a2" || exit 0
+    is_alias "$a1" && is_safe_abspath "$a2" || exit 0
     tmp="${TMPDIR:-/tmp}/macclip.$$.png"
     pngpaste "$tmp" || exit 0
-    scp -q -- "$tmp" "$a1:$a2"
+    /usr/bin/scp -q -- "$tmp" "$a1:$a2"
     rm -f "$tmp"
     ;;
 

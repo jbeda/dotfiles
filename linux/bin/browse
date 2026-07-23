@@ -23,5 +23,11 @@ if ! exec 3<>"/dev/tcp/127.0.0.1/${port}" 2>/dev/null; then
   exit 1
 fi
 
-printf 'open\t%s\n' "$url" >&3
+# Shared secret gating the bridge (darwin/mac-bridge/dispatch). No token => empty
+# field => the Mac rejects it (fail closed); run darwin/mac-bridge/set-token once.
+tok=""
+tokfile="${MAC_BRIDGE_TOKEN_FILE:-$HOME/.config/mac-bridge/token}"
+if [[ -r "$tokfile" ]]; then IFS= read -r tok < "$tokfile" || true; fi
+
+printf '%s\topen\t%s\n' "$tok" "$url" >&3
 exec 3>&-

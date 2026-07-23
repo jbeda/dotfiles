@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+#
+# set-token -- establish the mac-bridge shared secret. Run ON THE MAC. One shot:
+# generate a random token locally and push the SAME token to the box, both at
+# ~/.config/mac-bridge/token, mode 600. That token authenticates every bridge
+# request (see darwin/mac-bridge/dispatch); a different local user on the box
+# can't read a 600 file, so they can't forge a request.
+#
+#   ./set-token [ssh-host-alias]        # default: claudes-plan
+#
+# Idempotent-ish: re-running ROTATES the token (new random value pushed to both
+# ends at once), which is the right way to revoke a possibly-leaked one. Both
+# ends flip together, so there's no window where they disagree beyond the scp.
+# Fail closed: until this has run, dispatch refuses every request.
+set -euo pipefail
+
+host="${1:-claudes-plan}"
+tokfile="$HOME/.config/mac-bridge/token"
+
+say()  { printf '\033[1;32m✔\033[0m  %s\n' "$1"; }
+die()  { printf '\033[1;31m✖\033[0m  %s\n' "$1" >&2; exit 1; }
+
+[[ "$(uname -s)" == "Darwin" ]] || die "Run this on the Mac (it pushes to the box)."
+
+# Generate locally with a tight umask so the file is 600 from birth.
+mkdir -p "$(dirname "$tokfile")"
+token="$(openssl rand -hex 32)"
+( umask 077; printf '%s\n' "$token" > "$tokfile" )
+chmod 600 "$tokfile"
+say "Wrote $tokfile (mode 600)"
+
+# Push the identical token to the box. Create the dir 700, write the file, then
+# lock it to 600. Uses your normal ssh to the box (the same access `code` and
+# `clip-image` rely on), so no new trust is introduced.
+ssh "$host" 'mkdir -p ~/.config/mac-bridge && chmod 700 ~/.config/mac-bridge'
+printf '%s\n' "$token" | ssh "$host" 'umask 077; cat > ~/.config/mac-bridge/token && chmod 600 ~/.config/mac-bridge/token'
+say "Synced token to $host:~/.config/mac-bridge/token"
+say "Done. The bridge is now authenticated; rotate any time by re-running this."

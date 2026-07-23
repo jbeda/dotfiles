@@ -118,7 +118,7 @@ Host claudes-plan-tunnel
     ForwardAgent no
     ControlMaster no
     ControlPath none
-    RemoteForward $PORT 127.0.0.1:$PORT
+    RemoteForward 127.0.0.1:$PORT 127.0.0.1:$PORT
     ExitOnForwardFailure yes
     ServerAliveInterval 20
     ServerAliveCountMax 3
@@ -133,6 +133,13 @@ info "     CONF"
 info "     sudo sshd -t && sudo systemctl reload ssh"
 info "Then reconnect. Also install VS Code's 'code' CLI on PATH (Command Palette"
 info "-> Shell Command: Install 'code' command in PATH) and the Remote - SSH ext."
+
+# --- 4b. Establish the shared token (bridge fails closed without it) -----
+# The dispatcher authenticates every request with a shared secret; run set-token
+# now (and any time to rotate). It generates the token here and pushes the same
+# value to the box. We don't auto-run it (it needs ssh to the box up), just point.
+info "4) REQUIRED -- establish the bridge token (fails closed until you do):"
+info "     $here/set-token $ssh_host"
 
 # --- 5. Dependency check for the clip-image verb ------------------------
 # `paste-image` (box) -> clip-image (here) needs pngpaste to read the clipboard.
