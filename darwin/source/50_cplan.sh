@@ -14,7 +14,17 @@
 # Override the ssh host by exporting CPLAN_HOST in ~/.zsh.local. Use whatever
 # name resolves on EVERY network you roam to -- your Tailscale MagicDNS name,
 # not a home-only DNS name -- or reconnects will fail away from home.
+# ServerAlive* makes a dropped network kill the ssh within ~30s (instead of
+# hanging until TCP gives up), which is what lets the term-sane cleanup below
+# run automatically after a disconnect. ConnectTimeout keeps reconnect
+# attempts from hanging while the laptop's network is still settling.
 cplan() {
-  local host="${CPLAN_HOST:-claudes-plan}"
-  ssh -t "$host" 'exec zsh -ic "tmux new -A -s main"'
+  local host="${CPLAN_HOST:-claudes-plan}" rc
+  term-sane  # clear any junk modes left by a previous dropped connection
+  ssh -t \
+    -o ServerAliveInterval=15 -o ServerAliveCountMax=2 -o ConnectTimeout=10 \
+    "$host" 'exec zsh -ic "tmux new -A -s main"'
+  rc=$?
+  term-sane  # the remote tmux never got to undo its modes; do it locally
+  return $rc
 }
