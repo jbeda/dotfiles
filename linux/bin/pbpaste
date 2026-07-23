@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+#
+# pbpaste -- print your MAC's clipboard to stdout over the reverse-SSH bridge.
+# macOS-parity name, so `pbpaste > file` / `pbpaste | ...` on this box pulls the
+# Mac clipboard exactly like it would locally on the Mac.
+#
+# Sends a "clip-get" verb line to 127.0.0.1:$MAC_BRIDGE_PORT; an SSH
+# RemoteForward tunnels it to the launchd listener on the Mac, which runs the
+# real /usr/bin/pbpaste and writes the clipboard back over the SAME socket. We
+# copy that byte stream to stdout unchanged. See darwin/mac-bridge/ for the Mac
+# side + ssh config.
+set -euo pipefail
+
+port="${MAC_BRIDGE_PORT:-17603}"
+
+if ! { exec 3<>"/dev/tcp/127.0.0.1/${port}"; } 2>/dev/null; then
+  echo "pbpaste: nothing is listening on 127.0.0.1:${port} -- is the SSH bridge up?" >&2
+  echo "         See ~/src/dotfiles/darwin/mac-bridge/README.md" >&2
+  exit 1
+fi
+
+printf 'clip-get\n' >&3
+cat <&3            # read the Mac's pbpaste output until it closes the socket
+exec 3>&-

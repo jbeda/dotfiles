@@ -12,6 +12,16 @@ below). Three verbs today:
   and `scp` it to `<host>:<path>` on the box, so you can hand the path to
   Claude Code, which loads an image from a plain path (`linux/bin/paste-image`,
   bound to `C-Spc i` in tmux)
+- **`clip-get`** — print the Mac's **text** clipboard back over the socket; the
+  box-side `pbpaste` (`linux/bin/pbpaste`) copies it to stdout
+
+**Text clipboard, the other direction:** box-side `pbcopy` (`linux/bin/pbcopy`)
+does **not** use this bridge — it copies stdin to the Mac clipboard via an
+**OSC 52** terminal escape, which rides your existing terminal/SSH with no
+tunnel at all (works even when the bridge is down). Reading (`pbpaste`) can't
+ride OSC 52 cleanly — terminals prompt-spam clipboard *reads* over SSH — so the
+read half uses the `clip-get` verb here. Net: `foo | pbcopy` and `pbpaste` give
+you macOS-parity text clipboard sync in both directions.
 
 ```
 box browse/code-mac/paste-image  ──writes "verb<TAB>args"──▶  127.0.0.1:17603 (box)
@@ -123,6 +133,8 @@ browse https://example.com     # opens in the Mac browser
 code-mac                       # opens VS Code on the Mac, attached to $PWD here
 code-mac ~/src/someproject     # ...attached to that dir
 paste-image                    # pull the Mac clipboard image here, print its path
+some-command | pbcopy          # copy to the Mac clipboard (OSC 52, no bridge)
+pbpaste > file                 # paste the Mac clipboard here (via clip-get verb)
 ```
 
 For images, the ergonomic entry point is the tmux binding **`C-Spc i`**: it runs
@@ -239,11 +251,15 @@ transparently — but with the keepalives above, reconnect is fast and the
 
 ## Security
 
-The listener binds to `127.0.0.1` and only accepts three verbs, each validated
+The listener binds to `127.0.0.1` and only accepts four verbs, each validated
 in `dispatch`: `open` runs `open` only for `http://` / `https://` URLs (no
 `file://` or app-scheme URLs); `code` and `clip-image` both require the host to
 be a bare ssh-alias (`[A-Za-z0-9._-]`) and the path to be absolute before running
-`code --remote` / `scp`. Any local process on the Mac could still drive these,
-but the surface is limited to "open a web URL", "open VS Code on an ssh host",
-and "scp the clipboard image to an ssh host" — all low-risk on a personal
-machine.
+`code --remote` / `scp`; `clip-get` takes no args and just pipes `pbpaste` back.
+Any local process on the Mac could still drive these, but the surface is limited
+to "open a web URL", "open VS Code on an ssh host", "scp the clipboard image to
+an ssh host", and "read the text clipboard" — all low-risk on a personal machine.
+Note `clip-get` lets anything that can reach the loopback port read your
+clipboard; that port is the reverse tunnel (loopback-only on both ends), so the
+exposure is the same as the other verbs. The write direction (`pbcopy`) never
+touches this listener — it's an OSC 52 escape to your own terminal.

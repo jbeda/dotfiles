@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+#
+# pbcopy -- copy stdin to your MAC's clipboard, macOS-parity name. Uses OSC 52,
+# a terminal escape sequence, so it rides whatever terminal/SSH you're already
+# on -- NO reverse-SSH bridge, autossh tunnel, or Tailscale needed. Works on
+# hotel wifi where the bridge is down.
+#
+#   some-command | pbcopy      pbcopy < file      pbcopy <<<"text"
+#
+# How: emit  ESC ] 52 ; c ; <base64> BEL  to the terminal. Inside tmux,
+# `set-clipboard on` (link/.tmux.conf) catches it and forwards to Ghostty /
+# iTerm2, which writes the Mac's system clipboard. The counterpart READ
+# (Mac -> box) can't ride OSC 52 cleanly -- terminals prompt-spam clipboard
+# reads over SSH -- so `pbpaste` uses the mac-bridge instead.
+#
+# Limits: OSC 52 is fire-and-forget with no ack, so a terminal that drops it
+# (or a detached tmux pane with no attached client) fails SILENTLY. Terminals
+# also cap the payload (low hundreds of KB); huge pastes may truncate. For a
+# guaranteed, errorable path independent of the terminal, that'd be the bridge.
+set -euo pipefail
+
+# Emit to the controlling terminal, not stdout, so the escape still reaches the
+# Mac when stdout is redirected (e.g. `pbcopy | tee` makes no sense, but
+# `foo | pbcopy >/dev/null`-style pipelines shouldn't swallow the sequence).
+if [[ -w /dev/tty ]]; then term=/dev/tty; else term=/dev/stdout; fi
+
+# stdin -> single-line base64 (the OSC 52 payload carries no newlines).
+b64=$(base64 | tr -d '\n')
+
+printf '\033]52;c;%s\a' "$b64" > "$term"

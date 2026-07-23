@@ -62,4 +62,12 @@ case "$verb" in
     scp -q -- "$tmp" "$a1:$a2"
     rm -f "$tmp"
     ;;
+
+  # No args. Write the Mac clipboard back over the socket (stdout -> box).
+  # This is the READ half of clipboard sync; the WRITE half (box -> Mac) uses
+  # OSC 52 straight through the terminal instead (linux/bin/pbcopy), so there's
+  # deliberately no clip-set verb here. Box sender: linux/bin/pbpaste.
+  clip-get)
+    exec /usr/bin/pbpaste
+    ;;
 esac
