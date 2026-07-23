@@ -12,6 +12,8 @@
     'starship:starship completions zsh'
     'uv:uv generate-shell-completion zsh'
     'uvx:uvx --generate-shell-completion zsh'
+    'kubectl:kubectl completion zsh'
+    'kind:kind completion zsh'
   )
   for spec in $specs; do
     tool=${spec%%:*}
