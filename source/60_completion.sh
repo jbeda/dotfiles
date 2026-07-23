@@ -57,6 +57,13 @@ zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
 zstyle ':completion:*' use-cache on
 zstyle ':completion:*' cache-path ~/.zcompcache
 
+# AWS CLI v2 ships aws_completer (a bash-style completer), not a generatable
+# zsh script, so register it via bashcompinit instead of the loop above.
+if (( $+commands[aws_completer] )); then
+  autoload -Uz bashcompinit && bashcompinit
+  complete -C aws_completer aws
+fi
+
 # SSH auto-completion based on entries in known_hosts
 if [[ -f ~/.ssh/known_hosts ]]; then
   zstyle ':completion:*:(ssh|scp|sftp):*' hosts \
