@@ -21,6 +21,16 @@ directories (`~/.config` is shared with unmanaged tools), and only leaf files
 are symlinked (e.g. `darwin/config/ghostty/config` → `~/.config/ghostty/config`).
 Platform subdirectories install only on that platform.
 
+### Shell Startup Tiers
+
+`.zprofile` sources `.zshrc` unconditionally, so `source/*.sh` runs in **non-interactive login shells** (`zsh -lc`, macOS launchd/GUI-spawned shells) too, not just interactive ones. That gives three tiers:
+
+1. **Every zsh** (`zsh -c`, scripts, cron): `.zshenv` only. Keep it minimal — a handful of PATH entries (mise shims, `~/.local/bin`) that must exist in bare `zsh -c`. It is paid by every zsh spawn; do not add a composable source loop or anything slow. If it grows past a screenful, something belongs in a later tier.
+2. **Login shells** (including non-interactive `zsh -lc`): `.zshenv` + the *unguarded* files in `source/` — PATH and environment (brew, go, mise, cloud SDKs, secrets, editor).
+3. **Interactive shells**: everything, including files guarded with `[[ -o interactive ]] || return` — prompt, keybindings, completion, history, tmux, terminal integrations.
+
+The contract for `source/*.sh`: **guarded = interactive-only UX; unguarded = environment, and must be safe (fast, no output, no ttys) when run non-interactively.** When adding a file, pick deliberately.
+
 ### Shell Script Modules (`source/`, `darwin/source/`, `linux/source/`)
 
 `.zshrc` sources all `*.sh` files from `source/` (and the platform-specific source dir) in numeric order. Scripts are numbered to control load order:
