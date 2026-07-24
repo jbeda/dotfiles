@@ -150,6 +150,7 @@ its own sheet: **[tmux-cheatsheet.md](tmux-cheatsheet.md)**. Quick hits:
 | Attach/create `main` | `ta` ⭐ |
 | Detach | `C-Spc d` (or `td` ⭐ from a nested shell) |
 | New window / split | `C-Spc c` / `C-Spc |` `C-Spc -` ⭐ |
+| Move panes / resize | `C-Spc ↑↓←→` · pane mode `C-Spc R` ⭐ |
 | Paste Mac clipboard image → path | `C-Spc i` ⭐ |
 
 ## Learn more

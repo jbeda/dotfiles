@@ -39,16 +39,89 @@ symlink, so existing panes keep working with your forwarded keys. Avoid
 
 ## Panes (splits)
 
+Creating and disposing of panes. **Selecting, resizing, and arranging** them has
+its own section next.
+
 | Action | Keys |
 | --- | --- |
 | Split left/right | `C-Spc %` or `C-Spc |` ⭐ (keeps current dir) |
 | Split top/bottom | `C-Spc "` or `C-Spc -` ⭐ (keeps current dir) |
-| Move between panes | `C-Spc ↑ ↓ ← →` |
-| Cycle panes | `C-Spc o` |
 | Zoom pane in/out (fullscreen toggle) | `C-Spc z` |
-| Resize pane | `C-Spc` then hold and repeat `C-↑ ↓ ← →` |
 | Convert pane to its own window | `C-Spc !` |
 | Close pane | `C-Spc x` (confirms) or type `exit` |
+
+## Selecting, resizing & arranging panes ⭐
+
+Everything for moving focus, changing pane size, and snapping panes into
+layouts, in one place.
+
+> **Why resize is on plain arrows, not `C-arrow` or `Option+arrow`:** tmux's
+> default resize binding uses `C-arrow`, which macOS Mission Control eats before
+> tmux sees it. It can't live on `Option+arrow` either — Ghostty binds
+> `alt+left`/`alt+right` to `esc:b`/`esc:f` (zsh word-motion) by default. So
+> resize lives on plain arrows under the prefix.
+
+### Select — move focus between panes
+
+| Keys | Action |
+| --- | --- |
+| `C-Spc ↑ ↓ ← →` | Move to the pane in that direction |
+| `Option-Shift-↑ ↓ ← →` ⭐ | Same, **without** the prefix (root binding) |
+| `C-Spc o` | Cycle to the next pane |
+| `C-Spc q` | Flash pane numbers; press one to jump to it |
+
+### Resize
+
+| Keys | Action |
+| --- | --- |
+| `C-Spc ↑ ↓ ← →` ⭐ | Quick nudge, 5 cells/tap. **Repeatable ~1s:** after the prefix, tap any mix of arrows — reverse overshoot with the opposite arrow — without re-pressing prefix |
+| `C-Spc R` ⭐ | Pane mode (below), for sustained fiddling |
+
+### Pane mode — `C-Spc R` ⭐
+
+For dialing in a layout hands-free. Press `C-Spc R` once, then:
+
+| Keys (no prefix) | Action |
+| --- | --- |
+| `↑ ↓ ← →` | Move between panes |
+| `Shift-↑ ↓ ← →` | Resize the active pane (5 cells) |
+| `[` / `]` | Swap the active pane toward the front / back of the order |
+| `Space` | Cycle to the next preset layout (name shown in the banner) |
+| `Esc` (or any other key) | Leave pane mode |
+
+A magenta **`PANE MODE`** banner shows in the status bar while it's active, so
+you always know the arrows are captured. Move, resize, swap, and re-layout
+freely; it stays until you Escape. Swapping to the **front** makes a pane the
+"main" one for the `main-*` layouts.
+
+The banner also shows the **current preset** — `⟨even-horizontal⟩`, `⟨tiled⟩`,
+etc. — so you can track where you are as `Space` cycles the order
+(even-horizontal → even-vertical → main-horizontal → main-vertical → tiled →
+wrap). It reads `⟨custom⟩` until you've cycled at least once, or after a manual
+resize breaks the preset. (tmux has no built-in "current layout name," so this
+is tracked in the `@panelayout` window option.)
+
+### Preset layouts
+
+tmux can auto-arrange **all** panes in a window into one of five layouts. They
+don't persist — a layout reflows once when applied; resizing afterward is
+free-form until you re-apply one.
+
+| Keys | Layout |
+| --- | --- |
+| `C-Spc Space` | Cycle to the next preset (easiest — no Option needed) |
+| `C-Spc M-1` | even-horizontal (side by side) |
+| `C-Spc M-2` | even-vertical (stacked) |
+| `C-Spc M-3` | main-horizontal (big pane on top) |
+| `C-Spc M-4` | main-vertical (big pane on left) |
+| `C-Spc M-5` | **tiled** — even grid |
+
+`M-n` needs the **left** Option (`macos-option-as-alt = left`); if it won't fire,
+just cycle with `C-Spc Space`. In the two `main-*` layouts the big "main" pane is
+sized by `main-pane-height`/`-width`, set to **70%** in `.tmux.conf` ⭐ — the
+stock default is an absolute 24 lines / 80 cols, which makes the main pane the
+*smaller* one in a large window. To make a **different** pane the main one, swap
+it to the front with `C-Spc {` / `C-Spc }`, then re-apply the layout.
 
 ## Two-pane Claude workspace: `cw` ⭐
 

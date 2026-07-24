@@ -533,15 +533,20 @@
     <!-- panes -->
     <section class="card">
       <h2><span class="idx mono">▤</span> Panes <span class="tag">(splits)</span></h2>
-      <p class="sub">Tile one window into several shells.</p>
+      <p class="sub">Tile one window into several shells. Selecting, resizing &amp; arranging are grouped below.</p>
 
       <div class="row"><div class="label">Split left / right</div><div class="keys"><kbd class="accent">C-Spc</kbd><kbd>%</kbd><span class="sep">or</span><kbd class="accent">C-Spc</kbd><kbd>|</kbd><span class="star">⭐</span></div></div>
       <div class="row"><div class="label">Split top / bottom</div><div class="keys"><kbd class="accent">C-Spc</kbd><kbd>"</kbd><span class="sep">or</span><kbd class="accent">C-Spc</kbd><kbd>-</kbd><span class="star">⭐</span></div></div>
-      <div class="row"><div class="label">Move between panes</div><div class="keys"><kbd class="accent">C-Spc</kbd><kbd>↑↓←→</kbd></div></div>
       <div class="row"><div class="label">Zoom pane (fullscreen toggle)</div><div class="keys"><kbd class="accent">C-Spc</kbd><kbd>z</kbd></div></div>
-      <div class="row"><div class="label">Resize<small>hold and repeat the arrow</small></div><div class="keys"><kbd class="accent">C-Spc</kbd><kbd>C-↑↓←→</kbd></div></div>
       <div class="row"><div class="label">Pane → its own window</div><div class="keys"><kbd class="accent">C-Spc</kbd><kbd>!</kbd></div></div>
       <div class="row"><div class="label">Close pane</div><div class="keys"><kbd class="accent">C-Spc</kbd><kbd>x</kbd><span class="sep">or</span><kbd class="mono">exit</kbd></div></div>
+
+      <div class="band" style="margin-top:.6rem"><span class="t">select · resize · arrange <span class="star">⭐</span></span><span class="r"></span></div>
+      <div class="row"><div class="label">Move focus between panes<small>Option-Shift-arrows do the same without the prefix</small></div><div class="keys"><kbd class="accent">C-Spc</kbd><kbd>↑↓←→</kbd><span class="sep">·</span><kbd>⌥⇧↑↓←→</kbd><span class="star">⭐</span></div></div>
+      <div class="row"><div class="label">Show pane numbers → jump</div><div class="keys"><kbd class="accent">C-Spc</kbd><kbd>q</kbd></div></div>
+      <div class="row"><div class="label">Resize<small>tap arrows, 5 cells, repeatable ~1s — not C-arrow (macOS eats it) nor Option+arrow (Ghostty maps it)</small></div><div class="keys"><kbd class="accent">C-Spc</kbd><kbd>↑↓←→</kbd><span class="star">⭐</span></div></div>
+      <div class="row"><div class="label">Pane mode<small>arrows move · Shift+arrows resize · [ ] swap · Space cycles layout (name shown in banner: ⟨even-horizontal⟩…⟨tiled⟩) · Esc exits</small></div><div class="keys"><kbd class="accent">C-Spc</kbd><kbd>R</kbd><span class="star">⭐</span></div></div>
+      <div class="row"><div class="label">Preset layouts<small>Space cycles; M-1..4 presets, M-5 tiled grid. main pane sized 70% via main-pane-height/-width ⭐</small></div><div class="keys"><kbd class="accent">C-Spc</kbd><kbd>Space</kbd><span class="sep">/</span><kbd>M-5</kbd></div></div>
     </section>
 
     <!-- copy mode -->
