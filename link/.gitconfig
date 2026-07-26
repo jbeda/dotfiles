@@ -2,8 +2,8 @@
   name = Joe Beda
   email = joe.github@bedafamily.com
   # signingkey is set per-platform in ~/.gitconfig.platform: a .pub file path on
-  # macOS, the public-key literal on Linux (so it resolves via a forwarded agent
-  # without a local key file). Included below, so it lands after this section.
+  # both macOS and Linux, naming a per-machine key. Included below, so it lands
+  # after this section.
 
 [core]
   autocrlf = input
@@ -80,6 +80,11 @@
 	defaultBranch = main
 [gpg]
 	format = ssh
+[gpg "ssh"]
+	# Without this, `git log --show-signature` reports "No signature" on commits
+	# that are in fact correctly signed -- git can't map a signature back to a
+	# principal without a list of trusted public keys.
+	allowedSignersFile = ~/.config/git/allowed_signers
 
 # Use the work email for any repo in the stacklok / stackloklabs GitHub orgs.
 # Matches on the remote URL (git 2.36+), so it applies wherever the repo is cloned.

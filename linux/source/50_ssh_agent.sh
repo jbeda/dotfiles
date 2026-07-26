@@ -49,8 +49,21 @@ timeout 2 ssh-add -l &> /dev/null
 if [[ $? -ge 2 ]]; then
     if flock "${ssh_agent_link}.lock" sh -c '
         SSH_AUTH_SOCK="$2" timeout 2 ssh-add -l > /dev/null 2>&1
-        rc=$?
-        [ "$rc" -ge 2 ] || exit 1   # another shell won the race; nothing to do
+        [ $? -ge 2 ] || exit 1      # another shell won the race; nothing to do
+
+        # The *link* being dead does not mean the local agent is. The usual
+        # case here is a forwarded agent that just died with its connection,
+        # leaving the link dangling while the shared local agent is alive and
+        # merely unreferenced. Probe the local socket directly and relink to it
+        # -- the old code probed only the link, so it unlinked and replaced a
+        # perfectly good agent on every reconnect, leaking the previous one
+        # (still running, socket gone, unreachable forever).
+        SSH_AUTH_SOCK="$1" timeout 2 ssh-add -l > /dev/null 2>&1
+        if [ $? -lt 2 ]; then
+            ln -sfn "$1" "$2"
+            exit 1                  # reused a live agent; it already has keys
+        fi
+
         rm -f "$1"                  # stale local socket if no agent answered
         ssh-agent -a "$1" > /dev/null
         ln -sfn "$1" "$2"           # point the stable path at the fresh agent

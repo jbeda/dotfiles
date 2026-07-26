@@ -1,0 +1,19 @@
+#!/bin/sh
+# ssh-keygen wrapper for git's `gpg.ssh.program`, with the agent removed.
+#
+# `ssh-keygen -Y sign` unconditionally probes SSH_AUTH_SOCK to see whether the
+# signing key lives in an agent *before* falling back to the private key on
+# disk. That probe is the failure mode this wrapper exists to kill: when the
+# laptop lid closes, the forwarded agent socket at /tmp/ssh-*/agent.* is still
+# held open by sshd, so connect() succeeds but the reply never comes back over
+# the dead TCP connection. ssh-keygen then blocks indefinitely and `git commit`
+# hangs with no error at all -- it never reaches the on-disk key.
+#
+# Pointing user.signingkey at the private key instead of the .pub does NOT help;
+# the agent probe happens either way. Unsetting SSH_AUTH_SOCK is what fixes it.
+# The signing key is a per-machine, passphrase-less file (see .gitconfig.platform),
+# so it never needed the agent in the first place.
+#
+# Linux only: on macOS the signing key may be held in the keychain-backed agent,
+# where removing SSH_AUTH_SOCK would break signing rather than fix it.
+exec env -u SSH_AUTH_SOCK ssh-keygen "$@"

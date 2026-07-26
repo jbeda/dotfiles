@@ -10,6 +10,14 @@
   #   gh ssh-key add ~/.ssh/id_ed25519_signing.pub --type signing --title "$(hostname) git signing"
   signingkey = ~/.ssh/id_ed25519_signing.pub
 
+# Sign through a wrapper that strips SSH_AUTH_SOCK. `ssh-keygen -Y sign` probes
+# the agent before falling back to the on-disk key, so a forwarded socket left
+# hanging by a closed laptop lid wedges `git commit` indefinitely with no error.
+# Resolved off PATH (~/.local/bin, linked by ./install) -- git does NOT expand
+# `~` in this value, so a bare name is both correct and portable.
+[gpg "ssh"]
+  program = git-ssh-sign
+
 # GitHub over https authenticates through gh (transport forced to https by the
 # url.insteadOf rewrite in .gitconfig). The empty helper resets the global
 # helper list so only gh is consulted for github.com.

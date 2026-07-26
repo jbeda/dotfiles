@@ -1,0 +1,22 @@
+# Public keys trusted to sign my commits, for `git log --show-signature` and
+# `git verify-commit`. Without gpg.ssh.allowedSignersFile pointing here, git
+# reports "No signature" on correctly-signed commits -- it has no way to map a
+# signature back to a principal.
+#
+# Public keys only; nothing secret lives in this file.
+#
+# Both identities are listed on every key because the same machine signs under
+# either email depending on the repo's remote (see the stacklok includeIf in
+# .gitconfig). namespaces="git" scopes the trust to commit/tag signing.
+#
+# Keep in sync with the SSH *signing* keys registered on GitHub:
+#   gh api /users/jbeda/ssh_signing_keys
+
+# Mac (~/.ssh/id_ed25519.pub) -- GitHub title "SSH key (ed25519)"
+joe.github@bedafamily.com,joe@stacklok.com namespaces="git" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDWb0q63fqsn8DPKFZa2HxMeO7uhiM7npgJXDCAv4DId
+
+# Dev containers -- GitHub title "Signing key for dev containers"
+joe.github@bedafamily.com,joe@stacklok.com namespaces="git" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH3dyxLq/IjUHvOO3lMLlqKhPBlBqZMByX2nwaccswBx
+
+# claudes-plan (~/.ssh/id_ed25519_signing.pub) -- GitHub title "claudes-plan git signing"
+joe.github@bedafamily.com,joe@stacklok.com namespaces="git" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL9b1ni5+XuAXHcndGxrDhahFe/mddS9wwMu/EoOSCuQ
