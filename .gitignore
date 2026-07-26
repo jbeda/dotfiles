@@ -1,0 +1,4 @@
+# Scratch space for agent hand-off prompts, notes, and throwaway files.
+# Lives in-repo (rather than /tmp) so it shows up in the IDE and is easy to
+# inspect; never committed.
+.scratch/
