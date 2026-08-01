@@ -64,3 +64,28 @@ theme = catppuccin-mocha
 # ExtraLight, very bright thin strokes on a dark field start to halate. Applied
 # after `theme` on purpose; later keys win.
 background = #181825
+
+# Floor on the contrast ratio between fg and bg (1-21). Rescues the color
+# combinations programs pick for themselves -- dark blue on a dark field being
+# the classic -- without touching pairs that are already legible. Kept low on
+# purpose: crank it and it starts overriding the theme's actual colors.
+minimum-contrast = 1.1
+
+# Interpret colors in Display P3 rather than sRGB (macOS only). On a wide-gamut
+# panel this pushes Mocha's accents noticeably richer. The tradeoff: the same
+# hex renders differently here than in VS Code, so the two drift slightly apart
+# despite both being Mocha. Drop back to `srgb` if that bothers you more than
+# the extra saturation helps.
+window-colorspace = display-p3
+
+# --- Window ---------------------------------------------------------------
+# Breathing room so text doesn't run into the window edge; balance spreads any
+# leftover pixels across all four sides instead of piling them on one.
+window-padding-x = 8
+window-padding-y = 4
+window-padding-balance = true
+
+# Themed title bar rather than the native gray slab sitting above a dark window.
+# The proxy icon (cmd-click the title for the path) is worth keeping.
+macos-titlebar-style = transparent
+macos-titlebar-proxy-icon = visible
