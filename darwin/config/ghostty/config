@@ -50,13 +50,18 @@ font-feature = ss09
 font-feature = ss10
 
 # Theme -- Catppuccin Mocha, bundled with Ghostty (it ships the iterm2-color-
-# schemes collection). Verify the exact name with: ghostty +list-themes
+# schemes collection). The name is the theme's FILENAME, matched exactly --
+# spaces and capitals included, so `catppuccin-mocha` does not resolve. A miss
+# is not fatal: Ghostty logs "theme not found" and carries on with its default
+# palette, so the only symptom is wrong colors. Verify with
+# `ghostty +list-themes`, and check the whole file with
+# `ghostty +validate-config --config-file=<path>` after editing.
 #
 # Kept in sync with the VS Code theme, tmux's status bar (link/.tmux.conf) and
 # vivid's LS_COLORS (source/50_misc.sh), all Mocha. Starship needs no change:
 # config/starship.toml names ANSI colors rather than hex, so it inherits
 # whatever palette is set here.
-theme = catppuccin-mocha
+theme = Catppuccin Mocha
 
 # Mocha's own surfaces slid down one step, matching catppuccin.colorOverrides in
 # VS Code: the editor/terminal field takes what was `mantle` (#181825) instead of
