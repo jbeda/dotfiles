@@ -7,9 +7,25 @@ if command -v gdircolors >/dev/null 2>&1; then
   alias dircolors='gdircolors'
 fi
 
-if command -v dircolors >/dev/null 2>&1; then
-  eval $(dircolors "${DOTFILES_ROOT}/third_party/dircolors-solarized/dircolors.256dark")
+# LS_COLORS, themed to match everything else (Ghostty, tmux, VS Code all on
+# Catppuccin Mocha). vivid generates it from a YAML filetype database, so the
+# palette is one word to change rather than a wall of hex.
+#   macOS:  brew install vivid
+#   Debian: sudo apt install vivid
+# Costs a process spawn per interactive shell; vivid is a few ms, and this file
+# is already interactive-only.
+#
+# Errors are deliberately NOT swallowed. A vivid too old to know the theme would
+# otherwise export an empty LS_COLORS and silently fall back to unthemed output
+# -- the kind of quiet degradation that's much more expensive to debug than a
+# visible error at shell start.
+if command -v vivid >/dev/null 2>&1; then
+  export LS_COLORS="$(vivid generate catppuccin-mocha)"
+fi
 
+# Without vivid, LS_COLORS stays unset and GNU ls falls back to its own built-in
+# defaults -- still colored, just not themed.
+if command -v dircolors >/dev/null 2>&1; then
   alias ls='ls --color=auto'
   command -v gls >/dev/null 2>&1 && alias ls='gls --color=auto'
 

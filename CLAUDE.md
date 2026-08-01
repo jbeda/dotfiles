@@ -47,9 +47,11 @@ Add a new shell feature by creating a numbered `.sh` file in `source/`. Runtime 
 
 ### Third-Party Submodules (`third_party/`)
 
-- `dircolors-solarized` — solarized colors for `ls`/`grep` output
+- `tmux-resurrect` / `tmux-continuum` — save and auto-restore tmux sessions across reboots
 
 Initialize submodules with `git submodule update --init` after cloning.
+
+Terminal colors are not a submodule: `LS_COLORS` is generated at shell startup by `vivid` (`source/50_misc.sh`), themed to match Ghostty, tmux, and VS Code.
 
 ### Local Overrides (not in repo)
 

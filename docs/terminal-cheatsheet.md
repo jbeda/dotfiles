@@ -92,7 +92,7 @@ Shell aliases (platform-guarded where noted):
 
 | Alias | Expands to | Where |
 | --- | --- | --- |
-| `ls` | colorized `ls` (solarized) | `50_misc.sh` |
+| `ls` | colorized `ls` (catppuccin mocha, via `vivid`) | `50_misc.sh` |
 | `grep` / `fgrep` / `egrep` | colorized | `50_misc.sh` |
 | `tl` ⭐ | `tmux ls` | `50_tmux.sh` |
 | `td` ⭐ | `tmux detach` | `50_tmux.sh` |
