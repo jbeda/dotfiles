@@ -8,3 +8,43 @@
 # copy mode and zsh line editing. Right Option keeps composing special
 # characters (e.g. Option-8 for the bullet).
 macos-option-as-alt = left
+
+# Fonts -- kept in sync with editor.fontFamily / editor.fontWeight /
+# editor.fontLigatures in VS Code's user settings on the Mac, so the terminal
+# and the editor render identically. Change one, change the other.
+#
+# Install the *static* Monaspace build (monaspace-static-*.zip), not variable:
+# the variable font has no `ital` axis yet, so italics come out as synthetic
+# obliques rather than Xenon's designed slab italic. Nerd Font glyphs (used by
+# the Claude Code statusline) need no patched font -- Ghostty bundles a
+# Symbols Nerd Font fallback and size-matches it to the primary font.
+#
+# font-style matches the style name the *font* advertises, not a numeric
+# weight. Verify the exact strings with: ghostty +list-fonts | grep -i xenon
+font-family = Monaspace Xenon
+font-style = ExtraLight
+font-style-italic = ExtraLight Italic
+
+# Bold inherits the family's Bold face, which is a long way from ExtraLight.
+# Uncomment to pull it closer to the body text.
+# font-style-bold = Regular
+# font-style-bold-italic = Regular Italic
+
+# Monaspace puts its coding ligatures in the stylistic sets, which are off by
+# default; calt (texture healing), liga and dlig are on by default. So the
+# sets have to be named explicitly, and dlig turned off -- it carries the
+# typographic f-ligatures (fi, fl, ffi), which are single-advance and collapse
+# a column in grid-less renderers like VS Code. Harmless in a terminal, but
+# disabled here so both sides look the same.
+font-feature = -dlig
+font-feature = cv01=2
+font-feature = ss01
+font-feature = ss02
+font-feature = ss03
+font-feature = ss04
+font-feature = ss05
+font-feature = ss06
+font-feature = ss07
+font-feature = ss08
+font-feature = ss09
+font-feature = ss10
