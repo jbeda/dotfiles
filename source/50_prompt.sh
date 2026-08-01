@@ -9,18 +9,38 @@ else
   unset STARSHIP_ROOT_BADGE
 fi
 
-# Deterministic per-host color: hash the short hostname into a curated
-# 256-color palette so every machine you land on shows a distinct, stable
-# hostname color -- a glance tells you where you are. The colored string (ANSI
-# baked in) is printed by the env_var module in config/starship.toml; Starship
-# wraps the escapes in %{ %} for zsh, so prompt width stays correct. Edit the
-# palette to taste; order changes which host gets which color.
+# Deterministic per-host color: hash the short hostname into a curated palette
+# so every machine you land on shows a distinct, stable hostname color -- a
+# glance tells you where you are. The colored string (ANSI baked in) is printed
+# by the env_var module in config/starship.toml; Starship wraps the escapes in
+# %{ %} for zsh, so prompt width stays correct. Edit the palette to taste;
+# order changes which host gets which color.
+#
+# Catppuccin Mocha accents as 24-bit "R;G;B". Nine of Mocha's fourteen, not all:
+# rosewater and flamingo are near-white and would read as ordinary text, and
+# maroon/sky/lavender sit right next to red/teal/blue. A palette whose entries
+# you can't tell apart at a glance defeats the whole point, so this trades
+# fewer colors for ones that are actually separable -- one per hue family.
+#
+# These emit truecolor, which needs the terminal to support it. Ghostty does,
+# and link/.tmux.conf asserts it for tmux's children; a 256-color terminal will
+# quantize them to the nearest palette entry rather than break.
 () {
-  local -a palette=(39 208 76 170 214 44 141 203 113 178 168 74 220 129 48 202)
+  local -a palette=(
+    '243;139;168'   # red
+    '250;179;135'   # peach
+    '249;226;175'   # yellow
+    '166;227;161'   # green
+    '148;226;213'   # teal
+    '116;199;236'   # sapphire
+    '137;180;250'   # blue
+    '203;166;247'   # mauve
+    '245;194;231'   # pink
+  )
   local host=${${(%):-%m}:-${HOST%%.*}}      # short hostname
   local sum=$(print -rn -- "$host" | cksum); sum=${sum%% *}
   local color=${palette[$(( sum % ${#palette} + 1 ))]}   # zsh arrays are 1-based
-  export STARSHIP_HOST=$'\e[1;38;5;'${color}$'m'${host}$'\e[0m'
+  export STARSHIP_HOST=$'\e[1;38;2;'${color}$'m'${host}$'\e[0m'
 }
 
 if command -v starship >/dev/null 2>&1; then
