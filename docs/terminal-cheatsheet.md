@@ -127,6 +127,7 @@ From `link/.gitconfig` — use as `git <alias>`:
 | `ta [name]` ⭐ | Attach to (or create) tmux session `name` (default `main`) | `50_tmux.sh` |
 | `cw [profile] [dir]` ⭐ | New tmux window: two panes, Claude Code left + shell right. See [tmux sheet](tmux-cheatsheet.md#two-pane-claude-workspace-cw-) | `50_tmux.sh` |
 | `cplan` ⭐ | (Mac) SSH into `claudes-plan` and attach its `main` session | `darwin/source/50_cplan.sh` |
+| `mcplan` ⭐ | (Mac) Same, over **mosh** — local echo for high-latency/lossy links (airplane, hotel, tethering). No agent or port forwarding, and `pbcopy` breaks | `darwin/source/50_cplan.sh` |
 | `browse <url\|file>` ⭐ | (Linux) open a URL/file on the Mac over the bridge; also `$BROWSER` for `gh`, `python -m webbrowser`, etc. | `linux/bin/browse` |
 | `paste-image` ⭐ | (Linux) pull the Mac clipboard image over the bridge, print its local path. Also bound to `C-Spc i` in tmux | `linux/bin/paste-image` |
 | `mise …` | Runtime versions (Node today). Pins live in `config/mise/config.toml` — edit there, not `mise use -g`. `./install` bootstraps the binary + runtimes | `50_mise.sh` |

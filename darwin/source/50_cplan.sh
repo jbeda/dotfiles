@@ -28,3 +28,64 @@ cplan() {
   term-sane  # the remote tmux never got to undo its modes; do it locally
   return $rc
 }
+
+# mcplan -- cplan over mosh, for high-latency or lossy links (airplane and
+# hotel wifi, tethering). Same host and same landing spot, so the two are
+# interchangeable; reach for this one when the link is bad.
+#
+# Two things mosh buys on a slow link. Local echo renders your keystrokes
+# immediately and reconciles with the server asynchronously, which is the whole
+# game when RTT is high -- a satellite connection sits near 700ms, where plain
+# ssh echoes each character about a second after you type it. Separately, mosh
+# diffs the screen at a capped frame rate, so streaming output (Claude Code
+# emitting tokens) arrives as fewer, larger repaints instead of every
+# incremental byte.
+#
+# No ServerAlive* here, unlike cplan. Those exist to make ssh give up FAST so
+# the term-sane cleanup can run; mosh inverts that goal -- its UDP session
+# survives network drops, sleep, and roaming, and resumes when connectivity
+# returns, so there is nothing to tear down. ConnectTimeout still guards the
+# one-shot ssh bootstrap that launches mosh-server.
+#
+# The command is passed as argv rather than as a string: mosh execs it directly
+# instead of handing it to a remote shell, so this needs none of the nested
+# quoting cplan's ssh form does. Still `zsh -ic` for the same reason as cplan --
+# linux/source/50_ssh_agent.sh only re-points the stable SSH_AUTH_SOCK symlink
+# from an interactive login. mosh always allocates a pty, so no -t.
+#
+# Tradeoffs, none fatal but worth knowing:
+#
+#   - No agent forwarding. mosh has no equivalent of ForwardAgent, so the box
+#     falls back to its shared local agent (50_ssh_agent.sh handles this) and
+#     may prompt once for the key passphrase. Box-side git still works.
+#   - No port forwarding. `ssh -O forward -L ...` dev-server tunnels need a
+#     plain ssh alongside; the ControlMaster block in ~/.ssh/config covers it.
+#     The mac-bridge is unaffected -- autossh owns that tunnel independently.
+#   - `pbcopy` breaks. It emits OSC 52, tmux re-emits it, and mosh 1.4.0 only
+#     accepts the `c;` form that tmux does not send. Fails silently, as pbcopy
+#     always does. `pbpaste` is fine (it uses the bridge, not the terminal).
+#   - No scrollback in the mosh client itself; use tmux copy-mode.
+#
+# Truecolor needs mosh >= 1.4.0 on BOTH ends or the Catppuccin bar quantizes.
+# Debian ships exactly 1.4.0; keep brew's matched to it.
+#
+# Prediction defaults to `adaptive`, which already shows predictions once the
+# link is slow -- so there is nothing to set for the case this function exists
+# for. Force it with mosh's own env var if you want it unconditionally:
+# `export MOSH_PREDICTION_DISPLAY=always` (values: adaptive, always, never).
+#
+# If mosh refuses to start complaining about the locale, that is the classic
+# failure: it passes the client's locale to mosh-server and rejects non-UTF-8.
+# source/10_unicode.sh sets en_US.UTF-8 on both ends, so this should not bite.
+mcplan() {
+  local host="${CPLAN_HOST:-claudes-plan}" rc
+  if ! command -v mosh > /dev/null 2>&1; then
+    echo "mcplan: mosh not installed -- brew install mosh (needs >= 1.4.0)" >&2
+    return 127
+  fi
+  term-sane  # clear any junk modes left by a previous dropped connection
+  mosh --ssh="ssh -o ConnectTimeout=10" "$host" -- zsh -ic "tmux new -A -s main"
+  rc=$?
+  term-sane  # the remote tmux never got to undo its modes; do it locally
+  return $rc
+}
