@@ -1,0 +1,59 @@
+# Global flowmark defaults -- symlinked to ~/.flowmark.toml by ./install.
+#
+# Markdown formatting: one sentence per line. Sentence-per-line keeps git diffs
+# scoped to the sentences that actually changed instead of reflowing whole
+# paragraphs. See https://sembr.org/.
+#
+# Why this file exists at all: flowmark discovers config by walking UP from its
+# cwd, and the walk crosses the git-repo boundary all the way to $HOME (verified
+# empirically -- a width set here reflows a config-less repo under ~/src, while a
+# repo carrying its own .flowmark.toml keeps its own values, since first match
+# wins). So this is a real global default that any repo can still override by
+# dropping its own .flowmark.toml at its root.
+#
+# That matters most for the VS Code integration. Markdown is formatted through
+# the jkillian.custom-local-formatters extension, registered in VS Code *user*
+# settings (window-scoped, so it is legal there) as the bare command:
+#
+#     flowmark -
+#
+# Deliberately bare. The document arrives on stdin, so flowmark never sees a
+# filename and cannot find a per-file config -- but the extension sets cwd to the
+# workspace root, so the walk-up starts there and lands here when the repo has no
+# config of its own. Spelling the flags out in the VS Code command instead would
+# override every repo's .flowmark.toml, which is exactly the wrong thing to make
+# universal.
+#
+# Two consequences worth knowing:
+#
+#   - cwd is the workspace root, not the edited file's directory, so per-
+#     subdirectory config in a monorepo will not resolve per-file.
+#   - A workspace opened outside $HOME misses this file entirely and silently
+#     falls back to flowmark's built-in default width of 88.
+#
+# Also: stdin is load-bearing. The extension supports a ${file} placeholder, but
+# that reads the file from DISK rather than the editor buffer, so formatting a
+# dirty buffer would silently revert unsaved edits. Keep it on stdin.
+#
+# Format a file or tree with:  flowmark --inplace --nobackup <path>
+# Check without writing with:  flowmark --check .
+#
+# Do not use --auto. It is a fixed preset that ignores [formatting] and turns on
+# smartquotes and ellipsis substitution, which we do not want.
+#
+# Two cases leave two sentences sharing a line. Both are expected, so take the
+# tool's output rather than splitting by hand -- the next run undoes it.
+#
+#   1. A sentence shorter than 20 characters gets no break after it.
+#   2. A terminating period sitting directly on an inline code span or a bold
+#      run is not seen as a sentence end, so those stay joined.
+#      https://github.com/jlevy/flowmark/issues/68
+
+[formatting]
+# Semantic line breaks: break at sentence boundaries.
+semantic = true
+
+# Effectively disable column wrapping so a line is exactly one sentence.
+# width = 0 means "no wrapping" but also disables the semantic split, so use a
+# width no sentence will reach instead.
+width = 100000
