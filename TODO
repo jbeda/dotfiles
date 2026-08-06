@@ -1,2 +1,12 @@
 * Plumb in a bin dir
 * Change the visual editor to be emacsclient ala https://wiki.archlinux.org/index.php/Emacs#As_a_daemon
+* tmux-peer-latency reads SSH_CONNECTION from the tmux SESSION env, but the peer
+  is a property of a CLIENT. Attaching the same session locally (no
+  SSH_CONNECTION) makes it fall back to the global env and report latency to the
+  last remote machine instead of nothing; two remote clients at once is
+  ambiguous by construction. Moot while every attach comes from one machine.
+  Fix: resolve per-client -- #{client_pid}, walk up to the sshd-session or
+  mosh-server parent, read SSH_CONNECTION from its /proc/<pid>/environ. Linux
+  only, so the Mac keeps the env-based path. NOT a mosh problem: mosh-server
+  inherits SSH_CONNECTION from its ssh bootstrap and passes it on, and Tailscale
+  IPs are stable per node, so roaming keeps the value correct.
