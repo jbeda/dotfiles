@@ -77,14 +77,32 @@ cplan() {
 # If mosh refuses to start complaining about the locale, that is the classic
 # failure: it passes the client's locale to mosh-server and rejects non-UTF-8.
 # source/10_unicode.sh sets en_US.UTF-8 on both ends, so this should not bite.
+#
+# --predict-overwrite is on by default because of tmux. mosh-client has no idea
+# tmux exists -- it sees one flat character grid -- so its default INSERTING
+# prediction shifts the rest of the row rightward, and in a vertically split
+# window that row is the divider and the neighbouring pane. Typing on the left
+# visibly distorts the same line on the right. Overwrite mode predicts in place,
+# so there is nothing to push sideways. Added in mosh 1.4.0 as "non-inserting
+# prediction". Turn it off without editing this file:
+#
+#     MCPLAN_PREDICT_OVERWRITE=0 mcplan
+#
+# Related knob, mosh's own: MOSH_PREDICTION_DISPLAY=never disables predictive
+# echo entirely. Worth reaching for once the link is good -- adaptive prediction
+# switches on above 30ms SRTT and only back off at 20ms (terminaloverlay.h,
+# SRTT_TRIGGER_HIGH/LOW), so a cross-country hop near 70ms keeps predicting
+# forever. Above 80ms it also underlines predictions, clearing only at 50ms.
 mcplan() {
   local host="${CPLAN_HOST:-claudes-plan}" rc
+  local -a predict
+  [[ "${MCPLAN_PREDICT_OVERWRITE:-1}" == 0 ]] || predict=(--predict-overwrite)
   if ! command -v mosh > /dev/null 2>&1; then
     echo "mcplan: mosh not installed -- brew install mosh (needs >= 1.4.0)" >&2
     return 127
   fi
   term-sane  # clear any junk modes left by a previous dropped connection
-  mosh --ssh="ssh -o ConnectTimeout=10" "$host" -- zsh -ic "tmux new -A -s main"
+  mosh "${predict[@]}" --ssh="ssh -o ConnectTimeout=10" "$host" -- zsh -ic "tmux new -A -s main"
   rc=$?
   term-sane  # the remote tmux never got to undo its modes; do it locally
   return $rc
