@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+#
+# tmux-peer-latency -- print the Tailscale round-trip time to the machine you
+# are attached FROM, for the tmux status bar. Output is a ready-to-drop token:
+#
+#     [113ms direct]        a peer-to-peer path
+#     [813ms DERP iad]      relayed through Tailscale's DERP server in Ashburn
+#     (nothing)             not over Tailscale, peer unreachable, or no tailscale
+#
+# Wired into status-right in link/.tmux.conf. tmux runs #() commands in the
+# background (>= 2.9) and reuses the previous output until they finish, so a
+# slow probe never stalls a repaint -- but keep it fast anyway, since it runs on
+# every status-interval tick.
+#
+# WHY THE RTT IS WORTH SEEING: it explains mosh's behaviour rather than leaving
+# it a mystery. Adaptive predictive echo switches on above 30ms and only back
+# off at 20ms, and starts underlining predictions above 80ms, clearing at 50ms
+# (SRTT_TRIGGER_*/FLAG_TRIGGER_* in mosh's terminaloverlay.h). A number in the
+# corner tells you which side of those lines you are on, and "DERP" tells you
+# NAT traversal failed and you are paying a relay hop.
+#
+# Finding the peer: SSH_CONNECTION's first field is the client address, and tmux
+# keeps it in the session environment (it is in the default update-environment
+# list). Session env first, then global, since the session's is refreshed on
+# attach. Under mosh this can be the value from an earlier ssh attach rather
+# than the live connection -- harmless, because it is the same machine; it only
+# goes stale if you attach the same session from a DIFFERENT host, in which case
+# the number describes the wrong peer until the next ssh attach.
+set -uo pipefail
+
+command -v tailscale > /dev/null 2>&1 || exit 0
+command -v tmux > /dev/null 2>&1 || exit 0
+
+peer=$(
+  { tmux show-environment SSH_CONNECTION 2> /dev/null \
+    || tmux show-environment -g SSH_CONNECTION 2> /dev/null; } \
+  | sed -n 's/^SSH_CONNECTION=\([^ ]*\).*/\1/p' | head -1
+)
+
+# Only Tailscale addresses (100.64.0.0/10 CGNAT) can be probed this way. A LAN
+# or public client address means this session did not come in over Tailscale.
+case "$peer" in
+  100.6[4-9].*|100.[7-9][0-9].*|100.1[0-1][0-9].*|100.12[0-7].*) ;;
+  *) exit 0 ;;
+esac
+
+# --c 1 is one probe, not the default 10; --timeout bounds an unreachable peer.
+# The path is already warm for a live session, so a single probe reports the
+# real route rather than the DERP-first-then-direct sequence a cold ping shows.
+#
+# --timeout takes a Go duration and REQUIRES a unit: bare `2` is a parse error
+# that exits 2 and prints the whole usage block, which -- with stderr discarded
+# -- looks exactly like an unreachable peer.
+out=$(tailscale ping --c 1 --timeout 2s "$peer" 2> /dev/null) || exit 0
+
+# pong from NAME (100.x.y.z) via DERP(iad) in 813ms
+# pong from NAME (100.x.y.z) via 172.56.167.102:28497 in 113ms
+rtt=$(printf '%s\n' "$out" | sed -n 's/.* in \([0-9.]*m*s\)$/\1/p' | head -1)
+[ -n "$rtt" ] || exit 0
+
+if printf '%s\n' "$out" | grep -q 'via DERP('; then
+  relay=$(printf '%s\n' "$out" | sed -n 's/.*via DERP(\([^)]*\)).*/\1/p' | head -1)
+  printf '[%s DERP %s]' "$rtt" "$relay"
+else
+  printf '[%s direct]' "$rtt"
+fi
