@@ -1,0 +1,27 @@
+{
+  "title": "WASD V2 (Mac)",
+  "rules": [
+    {
+      "description": "WASD V2: Print Screen -> Emoji picker",
+      "manipulators": [
+        {
+          "type": "basic",
+          "description": "Print Screen (f13 in Mac mode) -> Emoji & Symbols (ctrl-cmd-space)",
+          "from": { "key_code": "f13" },
+          "to": [
+            {
+              "key_code": "spacebar",
+              "modifiers": ["left_control", "left_command"]
+            }
+          ],
+          "conditions": [
+            {
+              "type": "device_if",
+              "identifiers": [{ "vendor_id": 1241, "product_id": 617 }]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

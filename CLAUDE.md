@@ -21,6 +21,16 @@ directories (`~/.config` is shared with unmanaged tools), and only leaf files
 are symlinked (e.g. `darwin/config/ghostty/config` → `~/.config/ghostty/config`).
 Platform subdirectories install only on that platform.
 
+**Karabiner:** only `assets/complex_modifications/*.json` is tracked;
+`karabiner.json` is app-managed, so it stays out of the repo. Enabling a rule
+*copies* it into `karabiner.json` — editing the asset alone changes nothing live,
+patch both. `wasd-v2.json` is scoped by `device_if` to the WASD V2
+(`0x04d9`/`0x0269`); in Mac mode (DIP SW1) that board sends **f13/f14/f15** for
+PrtSc/ScrLk/Pause, not the PC key codes. Only f13 is remapped: macOS already
+handles f14/f15 as brightness natively, and routing them through Karabiner's
+`consumer_key_code: display_brightness_*` was tried and *broke* brightness on
+macOS 26. Leave them alone. Volume/media come from firmware (DIP SW6, Menu=Fn).
+
 ### Shell Startup Tiers
 
 `.zprofile` sources `.zshrc` unconditionally, so `source/*.sh` runs in **non-interactive login shells** (`zsh -lc`, macOS launchd/GUI-spawned shells) too, not just interactive ones. That gives three tiers:
