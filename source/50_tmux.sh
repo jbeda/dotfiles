@@ -18,30 +18,31 @@ ta() {
   tmux new-session -A -s "$name"
 }
 
-# cw [profile] [dir] -- open a NEW tmux window (leaving the current pane
+# cw [account] [dir] -- open a NEW tmux window (leaving the current pane
 # untouched) split into two side-by-side panes rooted in <dir>:
-#   left  -> Claude Code, launched via `cswap run [profile]`
+#   left  -> Claude Code, launched via `mycc run [account]`
 #   right -> a plain shell in the same dir
-# <profile> is a cswap account num/alias; omit it to use the directory's mapped
-# account. <dir> defaults to the current directory. The first argument is taken
+# <account> is a mycc account name (`mycc accounts`); omit it to use the
+# directory's mapped account (`mycc map`), which prompts if unmapped.
+# <dir> defaults to the current directory. The first argument is taken
 # as <dir> if it looks like a path (contains "/", or is "~...", "." or "..").
 # Focus lands on the Claude pane. Requires being inside tmux.
 # Examples:
-#   cw                  # dir's mapped account, here
-#   cw 2                # cswap account 2, here
-#   cw 2 ~/src/myproj   # cswap account 2, in myproj
-#   cw ~/src/myproj     # dir's mapped account, in myproj
+#   cw                       # dir's mapped account, here
+#   cw gateway               # force the gateway account, here
+#   cw gateway ~/src/myproj  # gateway account, in myproj
+#   cw ~/src/myproj          # dir's mapped account, in myproj
 cw() {
   if [[ -z "$TMUX" ]]; then
     echo "cw: not inside tmux" >&2
     return 1
   fi
 
-  local profile="" dir=""
+  local account="" dir=""
   if [[ "$1" == */* || "$1" == "~"* || "$1" == "." || "$1" == ".." ]]; then
     dir="$1"
   else
-    profile="$1"
+    account="$1"
     dir="$2"
   fi
   dir="${dir:-$PWD}"
@@ -52,8 +53,8 @@ cw() {
     return 1
   fi
 
-  local run="cswap run"
-  [[ -n "$profile" ]] && run+=" $profile"
+  local run="mycc run"
+  [[ -n "$account" ]] && run+=" $account"
 
   tmux new-window -c "$dir" -n "${dir:t}" \; \
     split-window -h -c "$dir" \; \

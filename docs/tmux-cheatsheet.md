@@ -127,21 +127,22 @@ it to the front with `C-Spc {` / `C-Spc }`, then re-apply the layout.
 
 A shell helper (not a tmux binding) that opens a **new window** — leaving your
 current pane untouched — split into two side-by-side panes rooted in a
-directory: the left runs Claude Code via `cswap run`, the right is a plain
+directory: the left runs Claude Code via `mycc run`, the right is a plain
 shell. Focus lands on the Claude pane.
 
 | Command | What it does |
 | --- | --- |
-| `cw` | New window here; Claude via the dir's cswap-mapped account |
-| `cw 2` | …forcing cswap account `2` (overrides the mapping) |
-| `cw 2 ~/src/foo` | …account `2`, rooted in `~/src/foo` |
+| `cw` | New window here; Claude via the dir's `mycc`-mapped account |
+| `cw gateway` | …forcing the `gateway` account (overrides the mapping) |
+| `cw gateway ~/src/foo` | …`gateway` account, rooted in `~/src/foo` |
 | `cw ~/src/foo` | Mapped account, rooted in `~/src/foo` |
 
 The first argument is treated as the directory when it looks like a path;
-otherwise it's the cswap profile. Omitting the profile uses the directory's
-`cswap map` account, so map your projects once (`cswap map 2 ~/src/foo`) and a
-bare `cw` there just works. Must be run from inside tmux. See
-`source/50_tmux.sh`.
+otherwise it's an account name (`mycc accounts`). Omitting it uses the
+directory's `mycc map` account, so map your projects once
+(`mycc map gateway ~/src/foo`) and a bare `cw` there just works — an unmapped
+directory prompts and offers to remember the answer. Must be run from inside
+tmux. See `source/50_tmux.sh`.
 
 ## Copy / scroll mode
 

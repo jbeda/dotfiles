@@ -125,7 +125,7 @@ From `link/.gitconfig` — use as `git <alias>`:
 | --- | --- | --- |
 | `src [module]` ⭐ | Re-source your whole zsh config, or one `source/<module>.sh`. Fastest way to apply an edit without a new shell | `link/.zshrc` |
 | `ta [name]` ⭐ | Attach to (or create) tmux session `name` (default `main`) | `50_tmux.sh` |
-| `cw [profile] [dir]` ⭐ | New tmux window: two panes, Claude Code left + shell right. See [tmux sheet](tmux-cheatsheet.md#two-pane-claude-workspace-cw-) | `50_tmux.sh` |
+| `cw [account] [dir]` ⭐ | New tmux window: two panes, Claude Code left + shell right. See [tmux sheet](tmux-cheatsheet.md#two-pane-claude-workspace-cw-) | `50_tmux.sh` |
 | `cplan` ⭐ | (Mac) SSH into `claudes-plan` and attach its `main` session | `darwin/source/50_cplan.sh` |
 | `mcplan` ⭐ | (Mac) Same, over **mosh** — local echo for high-latency/lossy links (airplane, hotel, tethering). No agent or port forwarding, and `pbcopy` breaks | `darwin/source/50_cplan.sh` |
 | `browse <url\|file>` ⭐ | (Linux) open a URL/file on the Mac over the bridge; also `$BROWSER` for `gh`, `python -m webbrowser`, etc. | `linux/bin/browse` |

@@ -492,19 +492,19 @@
     <!-- cw: two-pane Claude workspace -->
     <section class="card span2">
       <h2><span class="idx mono">◨</span> <span class="mono">cw</span> — two-pane Claude workspace <span class="star">⭐</span></h2>
-      <p class="sub">A shell helper that opens a <b>new window</b> (current pane untouched) split into two side-by-side panes rooted in a directory: left runs Claude Code via <span class="mono">cswap run</span>, right is a plain shell. Focus lands on the Claude pane.</p>
+      <p class="sub">A shell helper that opens a <b>new window</b> (current pane untouched) split into two side-by-side panes rooted in a directory: left runs Claude Code via <span class="mono">mycc run</span>, right is a plain shell. Focus lands on the Claude pane.</p>
 
       <div class="row">
-        <div class="label">New window here<small>Claude via the dir's cswap-mapped account</small></div>
+        <div class="label">New window here<small>Claude via the dir's mycc-mapped account</small></div>
         <div class="keys"><kbd class="mono">cw</kbd></div>
       </div>
       <div class="row">
-        <div class="label">…forcing a cswap account<small>overrides the mapping</small></div>
-        <div class="keys"><kbd class="mono">cw 2</kbd></div>
+        <div class="label">…forcing an account<small>overrides the mapping</small></div>
+        <div class="keys"><kbd class="mono">cw gateway</kbd></div>
       </div>
       <div class="row">
         <div class="label">…account 2, rooted in a directory</div>
-        <div class="keys"><kbd class="mono">cw 2 ~/src/foo</kbd></div>
+        <div class="keys"><kbd class="mono">cw gateway ~/src/foo</kbd></div>
       </div>
       <div class="row">
         <div class="label">Mapped account, rooted in a directory<small>first arg is the dir when it looks like a path</small></div>
@@ -512,8 +512,8 @@
       </div>
 
       <div class="callout">
-        Omitting the profile uses the directory's <span class="mono">cswap map</span> account — so map your projects once
-        (<span class="mono">cswap map 2 ~/src/foo</span>) and a bare <kbd class="mono">cw</kbd> there just works; pass a number to override.
+        Omitting the account uses the directory's <span class="mono">mycc map</span> account — so map your projects once
+        (<span class="mono">mycc map gateway ~/src/foo</span>) and a bare <kbd class="mono">cw</kbd> there just works; pass an account name to override.
         Must be run from inside tmux. Defined in <span class="mono">source/50_tmux.sh</span>.
       </div>
     </section>
