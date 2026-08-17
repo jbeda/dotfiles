@@ -2,3 +2,8 @@
 # Lives in-repo (rather than /tmp) so it shows up in the IDE and is easy to
 # inspect; never committed.
 .scratch/
+
+# Per-machine working notes for agent sessions. This repo is public, so the
+# notes stay out of history; being ignored also means they do NOT sync
+# between machines.
+HANDOFF.md
