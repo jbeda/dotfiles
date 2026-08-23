@@ -6,3 +6,4 @@
 
 [tools]
 node = "lts"
+go = "1.27"
