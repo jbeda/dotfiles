@@ -7,3 +7,10 @@
 [tools]
 node = "lts"
 go = "1.27"
+
+[settings]
+# Without this mise points GOBIN at its versioned install dir
+# (~/.local/share/mise/installs/go/<ver>/bin), so `go install` binaries are
+# orphaned off PATH on every Go upgrade. Unset, Go defaults GOBIN to
+# $GOPATH/bin (~/src/go/bin), which 40_path.sh already puts on PATH.
+go.set_gobin = false
