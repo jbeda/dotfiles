@@ -1,0 +1,110 @@
+#!/bin/zsh
+# Supervise one ctrl+trackpad-swipe gesture and switch tmux windows for it.
+#
+# Why this is not a simple debounce. A macOS swipe is precision scroll: one
+# gesture is a dense burst of wheel events plus a momentum tail that decays for
+# a second or more. Measured on this setup, the tail's inter-event gaps grow
+# smoothly -- 22, 30, 38, 52, 66, 87, 98ms, with lone stragglers as far out as
+# 200ms -- so there is NO time threshold that separates "still the same swipe"
+# from "a new swipe". Every fixed cooldown either lets a straggler switch a
+# second window or makes a deliberate second swipe unusably slow.
+#
+# What DOES separate them is density. Over a 5-swipe trace:
+#   real swipe : 7, 16, 12, 12 events in the first 80ms
+#   straggler  : 0, 0, 0, 0
+# So this waits QUALIFY_MS before committing, and switches only if enough
+# events actually arrived. That costs ~50ms of latency before the window
+# changes, and in exchange a straggler can no longer move a window at all.
+#
+# The gating itself lives in tmux (see link/.tmux.conf): while @wheel_gesture
+# is set, every further wheel event -- ctrl still held or not -- is swallowed
+# there with no fork, only bumping @wheel_nu / @wheel_nd. This process just
+# watches those counters.
+#
+# Tunables (all ms except MIN/REBURST/LOW, which are event counts):
+#   TMUX_WHEEL_QUALIFY_MS  50   observation window before committing to switch
+#   TMUX_WHEEL_MIN_EVENTS   3   events needed in that window to count as a swipe
+#   TMUX_WHEEL_WINDOW_MS   50   width of the rolling rate window
+#   TMUX_WHEEL_REBURST      5   rate that counts as a NEW swipe mid-tail
+#   TMUX_WHEEL_LOW          1   rate the tail must decay to before re-arming
+#   TMUX_WHEEL_RELEASE_MS 120   silence that ends the gesture
+#   TMUX_WHEEL_POLL_MS     15   sampling interval
+emulate -L zsh
+zmodload zsh/datetime
+
+trigger=${1:-next}
+
+QUALIFY=${TMUX_WHEEL_QUALIFY_MS:-50}
+MIN=${TMUX_WHEEL_MIN_EVENTS:-3}
+WIN=${TMUX_WHEEL_WINDOW_MS:-50}
+REBURST=${TMUX_WHEEL_REBURST:-5}
+LOW=${TMUX_WHEEL_LOW:-1}
+RELEASE=${TMUX_WHEEL_RELEASE_MS:-120}
+POLL=${TMUX_WHEEL_POLL_MS:-15}
+GUARD=${TMUX_WHEEL_GUARD_MS:-5000}
+
+state() { tmux display -p '#{@wheel_gen} #{@wheel_nu} #{@wheel_nd}' 2>/dev/null }
+
+read -r gen0 nu nd <<< "$(state)"
+[[ -z $gen0 ]] && exit 0
+
+start=$EPOCHREALTIME
+last_change=$start
+total=$(( nu + nd ))
+prev=$total
+# baselines at the last switch, for choosing the direction of a re-burst
+base_u=0 base_d=0
+switched=0 armed=0
+typeset -a ht hv          # rolling history: sample time, cumulative total
+ht=($start) hv=($total)
+
+do_switch() {
+  local du=$(( nu - base_u )) dd=$(( nd - base_d )) dir
+  if   (( du > dd )); then dir=previous
+  elif (( dd > du )); then dir=next
+  else dir=$trigger
+  fi
+  tmux "${dir}-window" 2>/dev/null || true
+  base_u=$nu; base_d=$nd
+}
+
+while :; do
+  sleep 0.$(printf '%03d' $POLL)
+  read -r gen nu nd <<< "$(state)"
+  # A newer gesture superseded us: leave its state alone and get out.
+  [[ -z $gen || $gen != $gen0 ]] && exit 0
+  now=$EPOCHREALTIME
+  total=$(( nu + nd ))
+  (( total > prev )) && last_change=$now
+  prev=$total
+
+  ht+=($now); hv+=($total)
+  while (( ${#ht} > 1 && (now - ht[1]) * 1000 > WIN )); do
+    shift ht; shift hv
+  done
+  rate=$(( total - hv[1] ))
+
+  if (( switched == 0 )); then
+    if (( (now - start) * 1000 >= QUALIFY )); then
+      if (( total >= MIN )); then
+        do_switch; switched=1; armed=0
+      else
+        break        # a lone straggler, not a swipe -- switch nothing
+      fi
+    fi
+  else
+    if (( rate <= LOW )); then
+      armed=1
+    elif (( armed && rate >= REBURST )); then
+      do_switch; armed=0
+    fi
+  fi
+
+  (( (now - last_change) * 1000 >= RELEASE )) && break
+  (( (now - start) * 1000 >= GUARD )) && break
+done
+
+# Only clear the gate if we still own it.
+read -r gen_now _ _ <<< "$(state)"
+[[ $gen_now == $gen0 ]] && tmux set -g @wheel_gesture 0
+exit 0
