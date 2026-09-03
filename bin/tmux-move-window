@@ -1,0 +1,35 @@
+#!/bin/sh
+# Move the current tmux window into slot $1, SHIFTING the other windows over
+# instead of failing when the slot is taken (which is what plain `move-window`
+# does) or swapping (`swap-window`, which displaces whatever was there).
+#
+# tmux's own insert flags do the shifting but are relative to the window that
+# currently sits at the target, so the direction matters: `-b` lands ON the
+# target index, `-a` lands one past it. Pulling a window LEFT wants -b; pushing
+# it RIGHT wants -a, because removing it from its old slot first slides
+# everything between the two ends down by one.
+#
+# move-window doesn't renumber (renumber-windows only fires when a window is
+# closed), so gaps would accumulate; `move-window -r` at the end compacts the
+# session back to a contiguous run from base-index.
+set -e
+
+target="$1"
+case "$target" in
+  ''|*[!0-9]*) tmux display-message "move-window: '$target' is not an index"; exit 1 ;;
+esac
+
+cur=$(tmux display-message -p '#{window_index}')
+base=$(tmux show-options -gv base-index)
+last=$(tmux list-windows -F '#{window_index}' | tail -n 1)
+
+[ "$target" -lt "$base" ] && target=$base
+[ "$target" -gt "$last" ] && target=$last
+[ "$target" -eq "$cur" ] && exit 0
+
+if [ "$target" -gt "$cur" ]; then
+  tmux move-window -s ":$cur" -a -t ":$target"
+else
+  tmux move-window -s ":$cur" -b -t ":$target"
+fi
+tmux move-window -r
