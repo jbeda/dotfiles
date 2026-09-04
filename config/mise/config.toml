@@ -7,6 +7,13 @@
 [tools]
 node = "lts"
 go = "1.27"
+# Pinned to the 12 line rather than "latest" so a major bump is a deliberate
+# edit here. Deliberately NOT using corepack (which is bundled with node and
+# reads each project's packageManager field): it needs its own enable step, its
+# future as a node bundle is unsettled, and it does nothing outside a project.
+# One version manager is enough. If per-project pnpm versions ever actually
+# bite, revisit.
+pnpm = "12"
 
 [settings]
 # Without this mise points GOBIN at its versioned install dir
