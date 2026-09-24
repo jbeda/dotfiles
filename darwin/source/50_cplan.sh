@@ -67,7 +67,9 @@ cplan() {
 #   - No scrollback in the mosh client itself; use tmux copy-mode.
 #
 # Truecolor needs mosh >= 1.4.0 on BOTH ends or the Catppuccin bar quantizes.
-# Debian ships exactly 1.4.0; keep brew's matched to it.
+# OSC 8 hyperlinks need development builds containing the upstream support on BOTH
+# ends. mcplan selects the Linuxbrew server; override it for another host with
+# MCPLAN_MOSH_SERVER=mosh-server.
 #
 # Prediction defaults to `adaptive`, which already shows predictions once the
 # link is slow -- so there is nothing to set for the case this function exists
@@ -94,7 +96,7 @@ cplan() {
 # SRTT_TRIGGER_HIGH/LOW), so a cross-country hop near 70ms keeps predicting
 # forever. Above 80ms it also underlines predictions, clearing only at 50ms.
 mcplan() {
-  local host="${CPLAN_HOST:-claudes-plan}" rc
+  local host="${CPLAN_HOST:-claudes-plan}" server="${MCPLAN_MOSH_SERVER:-/home/linuxbrew/.linuxbrew/bin/mosh-server}" rc
   local -a predict
   [[ "${MCPLAN_PREDICT_OVERWRITE:-1}" == 0 ]] || predict=(--predict-overwrite)
   if ! command -v mosh > /dev/null 2>&1; then
@@ -102,7 +104,7 @@ mcplan() {
     return 127
   fi
   term-sane  # clear any junk modes left by a previous dropped connection
-  mosh "${predict[@]}" --ssh="ssh -o ConnectTimeout=10" "$host" -- zsh -ic "tmux new -A -s main"
+  mosh "${predict[@]}" --server="$server" --ssh="ssh -o ConnectTimeout=10" "$host" -- zsh -ic "tmux new -A -s main"
   rc=$?
   term-sane  # the remote tmux never got to undo its modes; do it locally
   return $rc
