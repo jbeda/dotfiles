@@ -4,6 +4,11 @@
 # Note macOS also honors "$HOME/Library/Application Support/com.mitchellh.ghostty/config",
 # loaded AFTER this file, so anything set there silently wins. Keep that one absent.
 
+# Let Ghostty's interactive shell integration wrap `ssh` with `ghostty +ssh`.
+# It installs xterm-ghostty terminfo on the remote when possible, falls back to
+# xterm-256color when it cannot, and forwards Ghostty color metadata.
+shell-integration-features = ssh-env,ssh-terminfo
+
 # Left Option sends Esc+key (Meta), so emacs-style M-w / M-b / M-f work in tmux
 # copy mode and zsh line editing. Right Option keeps composing special
 # characters (e.g. Option-8 for the bullet).
