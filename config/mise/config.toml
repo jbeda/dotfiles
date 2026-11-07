@@ -14,6 +14,7 @@ go = "1.27"
 # One version manager is enough. If per-project pnpm versions ever actually
 # bite, revisit.
 pnpm = "12"
+bun = "1.4.4"
 
 [settings]
 # Without this mise points GOBIN at its versioned install dir
