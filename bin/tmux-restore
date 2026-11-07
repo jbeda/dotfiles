@@ -22,7 +22,11 @@ if [ ! -x "$restore_script" ] || [ ! -f "$resurrect_dir/last" ]; then
   exit 1
 fi
 
-"$restore_script"
+# tmux-resurrect expects TMUX to identify the server socket. Run it through a
+# detached starter session; the restore script removes session 0 when it is not
+# part of the saved state.
+tmux new-session -d -s 0
+tmux run-shell "$restore_script"
 
 if ! tmux has-session -t main 2>/dev/null; then
   echo "tmux-restore: snapshot restored no main session" >&2
