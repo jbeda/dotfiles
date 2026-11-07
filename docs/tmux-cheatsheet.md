@@ -192,18 +192,22 @@ also just run `paste-image` to get the path. See `darwin/mac-bridge/README.md`.
 
 ## Persistence across reboots (resurrect + continuum) ⭐
 
-Detach/reattach needs no help — the session and its processes keep running.
-These plugins add recovery across a **reboot or tmux-server restart**.
+Detach and reattach keep the session and its processes running. Resurrect and
+continuum recover the tmux layout after a reboot or tmux-server restart.
 
-| Action | Keys |
+| Action | Command or keys |
 | --- | --- |
 | Save layout now | `C-Spc C-s` |
-| Restore last saved layout | `C-Spc C-r` |
+| Restore the latest saved layout | Run `tmux-restore` from a shell outside tmux |
 
-Continuum autosaves every 15 min and **auto-restores on tmux startup**, so
-after a reboot your windows/panes/cwd come back on their own. Caveat: a reboot
-kills running processes (agents too) — the plugins restore the *layout and
-shells*, not a live process's memory. Relaunch the agent in the restored pane.
+Continuum saves automatically every 15 minutes. Before a reboot, save manually
+to capture the current layout. After the reboot, open a shell outside tmux and
+run `tmux-restore`. It restores the latest snapshot into a fresh tmux server
+and attaches the `main` session.
+
+A reboot ends running processes, including agents. Restoration brings back the
+layout, panes, current directories, shell history, and visible scrollback, but
+you must restart any commands in the restored panes.
 
 ## Sending a literal `Ctrl-Space` to the shell
 
