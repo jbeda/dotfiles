@@ -9,7 +9,9 @@ function src() {
   fi
 
   if [[ "$1" ]]; then
-    source "${DOTFILES_ROOT}/source/$1.sh"
+    local module="${DOTFILES_ROOT}/source/$1.sh"
+    [[ -e "$module" ]] || module="${DOTFILES_ROOT}/$platform/source/$1.sh"
+    source "$module"
   else
     for file in "${DOTFILES_ROOT}/source/"*; do
       source "$file"

@@ -22,7 +22,6 @@ if [ ! -x "$restore_script" ] || [ ! -f "$resurrect_dir/last" ]; then
   exit 1
 fi
 
-tmux start-server
 "$restore_script"
 
 if ! tmux has-session -t main 2>/dev/null; then

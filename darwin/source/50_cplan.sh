@@ -1,7 +1,9 @@
 [[ -o interactive ]] || return
 
 # cplan -- one command to (re)connect to claudes-plan and land in the `main`
-# tmux session, replacing "ssh in, then type ta".
+# tmux session, replacing "ssh in, then type ta". When the box has rebooted
+# and no tmux server is running, it restores the latest resurrect snapshot
+# before attaching; on a first run (or without a snapshot) it creates `main`.
 #
 # It runs an INTERACTIVE login shell on the box (`zsh -ic`) before attaching, on
 # purpose: linux/source/50_ssh_agent.sh only re-points the stable SSH_AUTH_SOCK
@@ -23,7 +25,7 @@ cplan() {
   term-sane  # clear any junk modes left by a previous dropped connection
   ssh -t \
     -o ServerAliveInterval=15 -o ServerAliveCountMax=2 -o ConnectTimeout=10 \
-    "$host" 'exec zsh -ic "tmux new -A -s main"'
+    "$host" 'exec zsh -ic "if tmux list-sessions >/dev/null 2>&1; then exec tmux new-session -A -s main; else tmux-restore || exec tmux new-session -s main; fi"'
   rc=$?
   term-sane  # the remote tmux never got to undo its modes; do it locally
   return $rc
@@ -104,7 +106,7 @@ mcplan() {
     return 127
   fi
   term-sane  # clear any junk modes left by a previous dropped connection
-  mosh "${predict[@]}" --server="$server" --ssh="ssh -o ConnectTimeout=10" "$host" -- zsh -ic "tmux new -A -s main"
+  mosh "${predict[@]}" --server="$server" --ssh="ssh -o ConnectTimeout=10" "$host" -- zsh -ic "if tmux list-sessions >/dev/null 2>&1; then exec tmux new-session -A -s main; else tmux-restore || exec tmux new-session -s main; fi"
   rc=$?
   term-sane  # the remote tmux never got to undo its modes; do it locally
   return $rc
